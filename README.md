@@ -5,7 +5,7 @@
 <h1 align="center">wardrowbe</h1>
 
 <p align="center">
-  Row through your style
+  Put your wardrobe in rows. Snap. Organize. Wear.
 </p>
 <p align="center">
   <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/Built%20with-Claude%20Code-D97757?logo=claude&logoColor=fff" alt="Built with Claude Code"></a>
@@ -19,7 +19,6 @@
   <a href="#contributing">Contributing</a>
 </p>
 
----
 
 Self-hosted wardrobe management with AI-powered outfit recommendations. Take photos of your clothes, let AI tag them, and get daily outfit suggestions based on weather and occasion.
 
