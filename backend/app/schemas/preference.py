@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -15,7 +13,9 @@ class StyleProfile(BaseModel):
     casual: int = Field(default=50, ge=0, le=100, description="Casual style preference 0-100")
     formal: int = Field(default=50, ge=0, le=100, description="Formal style preference 0-100")
     sporty: int = Field(default=50, ge=0, le=100, description="Sporty style preference 0-100")
-    minimalist: int = Field(default=50, ge=0, le=100, description="Minimalist style preference 0-100")
+    minimalist: int = Field(
+        default=50, ge=0, le=100, description="Minimalist style preference 0-100"
+    )
     bold: int = Field(default=50, ge=0, le=100, description="Bold/statement style preference 0-100")
 
 
@@ -28,7 +28,9 @@ class PreferenceBase(BaseModel):
     style_profile: StyleProfile = Field(default_factory=StyleProfile)
 
     # Occasion settings
-    default_occasion: str = Field(default="casual", description="Default occasion for recommendations")
+    default_occasion: str = Field(
+        default="casual", description="Default occasion for recommendations"
+    )
 
     # Temperature/comfort
     temperature_sensitivity: str = Field(
@@ -36,8 +38,12 @@ class PreferenceBase(BaseModel):
         pattern="^(low|normal|high)$",
         description="Temperature sensitivity level",
     )
-    cold_threshold: int = Field(default=10, ge=-20, le=30, description="Temperature (C) considered cold")
-    hot_threshold: int = Field(default=25, ge=10, le=45, description="Temperature (C) considered hot")
+    cold_threshold: int = Field(
+        default=10, ge=-20, le=30, description="Temperature (C) considered cold"
+    )
+    hot_threshold: int = Field(
+        default=25, ge=10, le=45, description="Temperature (C) considered hot"
+    )
     layering_preference: str = Field(
         default="moderate",
         pattern="^(minimal|moderate|heavy)$",
@@ -45,7 +51,9 @@ class PreferenceBase(BaseModel):
     )
 
     # Recommendation settings
-    avoid_repeat_days: int = Field(default=7, ge=0, le=30, description="Days before repeating items")
+    avoid_repeat_days: int = Field(
+        default=7, ge=0, le=30, description="Days before repeating items"
+    )
     prefer_underused_items: bool = Field(default=True, description="Prioritize less worn items")
     variety_level: str = Field(
         default="moderate",
@@ -65,18 +73,18 @@ class PreferenceCreate(PreferenceBase):
 
 
 class PreferenceUpdate(BaseModel):
-    color_favorites: Optional[list[str]] = None
-    color_avoid: Optional[list[str]] = None
-    style_profile: Optional[StyleProfile] = None
-    default_occasion: Optional[str] = None
-    temperature_sensitivity: Optional[str] = Field(default=None, pattern="^(low|normal|high)$")
-    cold_threshold: Optional[int] = Field(default=None, ge=-20, le=30)
-    hot_threshold: Optional[int] = Field(default=None, ge=10, le=45)
-    layering_preference: Optional[str] = Field(default=None, pattern="^(minimal|moderate|heavy)$")
-    avoid_repeat_days: Optional[int] = Field(default=None, ge=0, le=30)
-    prefer_underused_items: Optional[bool] = None
-    variety_level: Optional[str] = Field(default=None, pattern="^(low|moderate|high)$")
-    ai_endpoints: Optional[list[AIEndpoint]] = None
+    color_favorites: list[str] | None = None
+    color_avoid: list[str] | None = None
+    style_profile: StyleProfile | None = None
+    default_occasion: str | None = None
+    temperature_sensitivity: str | None = Field(default=None, pattern="^(low|normal|high)$")
+    cold_threshold: int | None = Field(default=None, ge=-20, le=30)
+    hot_threshold: int | None = Field(default=None, ge=10, le=45)
+    layering_preference: str | None = Field(default=None, pattern="^(minimal|moderate|heavy)$")
+    avoid_repeat_days: int | None = Field(default=None, ge=0, le=30)
+    prefer_underused_items: bool | None = None
+    variety_level: str | None = Field(default=None, pattern="^(low|moderate|high)$")
+    ai_endpoints: list[AIEndpoint] | None = None
 
 
 class PreferenceResponse(PreferenceBase):

@@ -13,12 +13,11 @@ from app.database import Base, get_db
 from app.main import app
 from app.models import User, UserPreference
 
-
 # Use PostgreSQL for tests (same as development, but with test prefix on tables)
 # The database URL is taken from the environment, defaulting to the development database
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    os.getenv("DATABASE_URL", "postgresql+asyncpg://wardrobe:wardrobe@localhost:5432/wardrobe")
+    os.getenv("DATABASE_URL", "postgresql+asyncpg://wardrobe:wardrobe@localhost:5432/wardrobe"),
 )
 
 

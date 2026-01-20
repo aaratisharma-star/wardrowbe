@@ -1,6 +1,5 @@
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notification import NotificationSettings
 
@@ -9,9 +8,7 @@ class TestNotificationSettings:
     """Tests for notification settings management."""
 
     @pytest.mark.asyncio
-    async def test_list_settings_empty(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_list_settings_empty(self, client: AsyncClient, test_user, auth_headers):
         """Test listing notification settings when none exist."""
         response = await client.get("/api/v1/notifications/settings", headers=auth_headers)
         assert response.status_code == 200
@@ -19,9 +16,7 @@ class TestNotificationSettings:
         assert isinstance(data, list)
 
     @pytest.mark.asyncio
-    async def test_create_ntfy_setting(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_create_ntfy_setting(self, client: AsyncClient, test_user, auth_headers):
         """Test creating an ntfy notification setting."""
         response = await client.post(
             "/api/v1/notifications/settings",
@@ -42,9 +37,7 @@ class TestNotificationSettings:
         assert data["enabled"] is True
 
     @pytest.mark.asyncio
-    async def test_create_email_setting(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_create_email_setting(self, client: AsyncClient, test_user, auth_headers):
         """Test creating an email notification setting."""
         response = await client.post(
             "/api/v1/notifications/settings",
@@ -65,9 +58,7 @@ class TestNotificationSettings:
             assert data["channel"] == "email"
 
     @pytest.mark.asyncio
-    async def test_update_setting(
-        self, client: AsyncClient, test_user, auth_headers, db_session
-    ):
+    async def test_update_setting(self, client: AsyncClient, test_user, auth_headers, db_session):
         """Test updating a notification setting."""
         # First create a setting directly in DB
         setting = NotificationSettings(
@@ -95,9 +86,7 @@ class TestNotificationSettings:
         assert data["priority"] == 5
 
     @pytest.mark.asyncio
-    async def test_delete_setting(
-        self, client: AsyncClient, test_user, auth_headers, db_session
-    ):
+    async def test_delete_setting(self, client: AsyncClient, test_user, auth_headers, db_session):
         """Test deleting a notification setting."""
         # Create a setting
         setting = NotificationSettings(
@@ -123,9 +112,7 @@ class TestSchedules:
     """Tests for notification schedules."""
 
     @pytest.mark.asyncio
-    async def test_list_schedules_empty(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_list_schedules_empty(self, client: AsyncClient, test_user, auth_headers):
         """Test listing schedules when none exist."""
         response = await client.get("/api/v1/notifications/schedules", headers=auth_headers)
         assert response.status_code == 200
@@ -133,9 +120,7 @@ class TestSchedules:
         assert isinstance(data, list)
 
     @pytest.mark.asyncio
-    async def test_create_schedule(
-        self, client: AsyncClient, test_user, auth_headers, db_session
-    ):
+    async def test_create_schedule(self, client: AsyncClient, test_user, auth_headers, db_session):
         """Test creating a notification schedule."""
         # First create a notification setting to use
         setting = NotificationSettings(
@@ -168,9 +153,7 @@ class TestNotificationDefaults:
     """Tests for notification defaults endpoint."""
 
     @pytest.mark.asyncio
-    async def test_get_ntfy_defaults(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_get_ntfy_defaults(self, client: AsyncClient, test_user, auth_headers):
         """Test getting default ntfy configuration."""
         response = await client.get(
             "/api/v1/notifications/defaults/ntfy",

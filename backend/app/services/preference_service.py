@@ -1,19 +1,18 @@
 import uuid
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.models.preference import UserPreference
-from app.schemas.preference import PreferenceCreate, PreferenceUpdate
+from app.schemas.preference import PreferenceUpdate
 
 
 class PreferenceService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_preferences(self, user_id: uuid.UUID) -> Optional[UserPreference]:
+    async def get_preferences(self, user_id: uuid.UUID) -> UserPreference | None:
         result = await self.db.execute(
             select(UserPreference).where(UserPreference.user_id == user_id)
         )
@@ -67,7 +66,12 @@ class PreferenceService:
                 current_profile.update(update_value)
                 preferences.style_profile = current_profile
                 flag_modified(preferences, "style_profile")
-            elif field in ("color_favorites", "color_avoid", "excluded_item_ids", "excluded_combinations"):
+            elif field in (
+                "color_favorites",
+                "color_avoid",
+                "excluded_item_ids",
+                "excluded_combinations",
+            ):
                 # JSONB array fields also need flag_modified
                 setattr(preferences, field, value)
                 flag_modified(preferences, field)
@@ -86,9 +90,7 @@ class PreferenceService:
 
         return await self.get_or_create_preferences(user_id)
 
-    async def add_excluded_item(
-        self, user_id: uuid.UUID, item_id: uuid.UUID
-    ) -> UserPreference:
+    async def add_excluded_item(self, user_id: uuid.UUID, item_id: uuid.UUID) -> UserPreference:
         preferences = await self.get_or_create_preferences(user_id)
         if item_id not in preferences.excluded_item_ids:
             preferences.excluded_item_ids = [*preferences.excluded_item_ids, item_id]
@@ -97,9 +99,7 @@ class PreferenceService:
             await self.db.refresh(preferences)
         return preferences
 
-    async def remove_excluded_item(
-        self, user_id: uuid.UUID, item_id: uuid.UUID
-    ) -> UserPreference:
+    async def remove_excluded_item(self, user_id: uuid.UUID, item_id: uuid.UUID) -> UserPreference:
         preferences = await self.get_or_create_preferences(user_id)
         if item_id in preferences.excluded_item_ids:
             preferences.excluded_item_ids = [

@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
@@ -10,7 +10,7 @@ from pydantic import BaseModel, field_validator
 class NtfyConfig(BaseModel):
     server: str = "https://ntfy.sh"
     topic: str
-    token: Optional[str] = None
+    token: str | None = None
 
     @field_validator("topic")
     @classmethod
@@ -60,9 +60,9 @@ class NotificationSettingsCreate(NotificationSettingsBase):
 
 
 class NotificationSettingsUpdate(BaseModel):
-    enabled: Optional[bool] = None
-    priority: Optional[int] = None
-    config: Optional[dict] = None
+    enabled: bool | None = None
+    priority: int | None = None
+    config: dict | None = None
 
 
 class NotificationSettingsResponse(NotificationSettingsBase):
@@ -103,14 +103,14 @@ class ScheduleCreate(ScheduleBase):
 
 
 class ScheduleUpdate(BaseModel):
-    notification_time: Optional[str] = None
-    occasion: Optional[str] = None
-    enabled: Optional[bool] = None
-    notify_day_before: Optional[bool] = None
+    notification_time: str | None = None
+    occasion: str | None = None
+    enabled: bool | None = None
+    notify_day_before: bool | None = None
 
     @field_validator("notification_time")
     @classmethod
-    def validate_time(cls, v: Optional[str]) -> Optional[str]:
+    def validate_time(cls, v: str | None) -> str | None:
         if v is not None and not re.match(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", v):
             raise ValueError("notification_time must be in HH:MM format")
         return v
@@ -142,13 +142,13 @@ class ScheduleResponse(BaseModel):
 class NotificationResponse(BaseModel):
     id: UUID
     user_id: UUID
-    outfit_id: Optional[UUID]
+    outfit_id: UUID | None
     channel: str
     status: str
     attempts: int
-    sent_at: Optional[datetime]
-    delivered_at: Optional[datetime]
-    error_message: Optional[str]
+    sent_at: datetime | None
+    delivered_at: datetime | None
+    error_message: str | None
     created_at: datetime
 
     class Config:

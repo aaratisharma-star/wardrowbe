@@ -3,7 +3,6 @@ import io
 import json
 import re
 from pathlib import Path
-from typing import Optional
 
 import httpx
 from PIL import Image, ImageOps
@@ -20,22 +19,22 @@ class TextGenerationResult(BaseModel):
 
 class ClothingTags(BaseModel):
     type: str = "unknown"
-    subtype: Optional[str] = None
-    primary_color: Optional[str] = None
+    subtype: str | None = None
+    primary_color: str | None = None
     colors: list[str] = []
-    pattern: Optional[str] = None
-    material: Optional[str] = None
+    pattern: str | None = None
+    material: str | None = None
     style: list[str] = []
-    formality: Optional[str] = None
+    formality: str | None = None
     season: list[str] = []
-    fit: Optional[str] = None
+    fit: str | None = None
     occasion: list[str] = []
-    brand: Optional[str] = None
-    condition: Optional[str] = None
+    brand: str | None = None
+    condition: str | None = None
     features: list[str] = []
     confidence: float = 0.0
-    description: Optional[str] = None  # Human-readable description
-    raw_response: Optional[str] = None  # Store the raw AI response
+    description: str | None = None  # Human-readable description
+    raw_response: str | None = None  # Store the raw AI response
 
 
 def load_prompt(name: str) -> str:
@@ -53,27 +52,83 @@ DESCRIPTION_PROMPT = load_prompt("clothing_description")
 
 # Valid values for validation
 VALID_TYPES = {
-    "shirt", "t-shirt", "pants", "jeans", "shorts", "dress", "skirt",
-    "jacket", "coat", "sweater", "hoodie", "blazer", "vest", "cardigan",
-    "polo", "blouse", "tank-top", "shoes", "sneakers", "boots", "sandals",
-    "hat", "scarf", "belt", "bag", "accessories"
+    "shirt",
+    "t-shirt",
+    "pants",
+    "jeans",
+    "shorts",
+    "dress",
+    "skirt",
+    "jacket",
+    "coat",
+    "sweater",
+    "hoodie",
+    "blazer",
+    "vest",
+    "cardigan",
+    "polo",
+    "blouse",
+    "tank-top",
+    "shoes",
+    "sneakers",
+    "boots",
+    "sandals",
+    "hat",
+    "scarf",
+    "belt",
+    "bag",
+    "accessories",
 }
 VALID_COLORS = {
-    "black", "white", "gray", "navy", "blue", "light-blue", "red",
-    "burgundy", "pink", "green", "olive", "yellow", "orange", "purple",
-    "brown", "tan", "beige", "cream", "gold", "silver"
+    "black",
+    "white",
+    "gray",
+    "navy",
+    "blue",
+    "light-blue",
+    "red",
+    "burgundy",
+    "pink",
+    "green",
+    "olive",
+    "yellow",
+    "orange",
+    "purple",
+    "brown",
+    "tan",
+    "beige",
+    "cream",
+    "gold",
+    "silver",
 }
 VALID_PATTERNS = {
-    "solid", "striped", "plaid", "checkered", "floral", "graphic",
-    "geometric", "polka-dot", "camouflage", "animal-print"
+    "solid",
+    "striped",
+    "plaid",
+    "checkered",
+    "floral",
+    "graphic",
+    "geometric",
+    "polka-dot",
+    "camouflage",
+    "animal-print",
 }
 VALID_MATERIALS = {
-    "cotton", "denim", "leather", "wool", "polyester", "silk", "linen",
-    "knit", "fleece", "suede", "velvet", "nylon", "canvas"
+    "cotton",
+    "denim",
+    "leather",
+    "wool",
+    "polyester",
+    "silk",
+    "linen",
+    "knit",
+    "fleece",
+    "suede",
+    "velvet",
+    "nylon",
+    "canvas",
 }
-VALID_FORMALITY = {
-    "very-casual", "casual", "smart-casual", "business-casual", "formal"
-}
+VALID_FORMALITY = {"very-casual", "casual", "smart-casual", "business-casual", "formal"}
 
 
 class AIEndpointConfig:
@@ -115,22 +170,26 @@ class AIService:
         if endpoints:
             for ep in endpoints:
                 if ep.get("enabled", True):
-                    self._endpoints.append(AIEndpointConfig(
-                        url=ep["url"],
-                        vision_model=ep.get("vision_model", "moondream"),
-                        text_model=ep.get("text_model", "phi3:mini"),
-                        name=ep.get("name", "custom"),
-                        enabled=True,
-                    ))
+                    self._endpoints.append(
+                        AIEndpointConfig(
+                            url=ep["url"],
+                            vision_model=ep.get("vision_model", "moondream"),
+                            text_model=ep.get("text_model", "phi3:mini"),
+                            name=ep.get("name", "custom"),
+                            enabled=True,
+                        )
+                    )
 
         # Always add default endpoint as fallback (even if user has custom endpoints)
         # This ensures we can fall back to in-house Ollama if user endpoints are unreachable
-        self._endpoints.append(AIEndpointConfig(
-            url=self.settings.ai_base_url,
-            vision_model=self.settings.ai_vision_model,
-            text_model=self.settings.ai_text_model,
-            name="default",
-        ))
+        self._endpoints.append(
+            AIEndpointConfig(
+                url=self.settings.ai_base_url,
+                vision_model=self.settings.ai_vision_model,
+                text_model=self.settings.ai_text_model,
+                name="default",
+            )
+        )
 
         # Legacy properties for backwards compatibility
         self.base_url = self._endpoints[0].url
@@ -175,9 +234,10 @@ class AIService:
         Returns empty/null fields rather than guessing.
         """
         import logging
+
         logger = logging.getLogger(__name__)
 
-        def extract_json(text: str) -> Optional[dict]:
+        def extract_json(text: str) -> dict | None:
             """Extract JSON from text, handling markdown and comments."""
             # Try direct parse
             try:
@@ -210,7 +270,7 @@ class AIService:
                                 break
             return None
 
-        def validate_value(value: Optional[str], valid_set: set) -> Optional[str]:
+        def validate_value(value: str | None, valid_set: set) -> str | None:
             """Validate a value against allowed set. Return None if invalid."""
             if value is None:
                 return None
@@ -262,7 +322,20 @@ class AIService:
         tags.formality = validate_value(data.get("formality"), VALID_FORMALITY)
 
         # Style (less strict - accept common style terms)
-        valid_styles = {"casual", "formal", "sporty", "minimalist", "bohemian", "preppy", "streetwear", "classic", "elegant", "athletic", "vintage", "modern"}
+        valid_styles = {
+            "casual",
+            "formal",
+            "sporty",
+            "minimalist",
+            "bohemian",
+            "preppy",
+            "streetwear",
+            "classic",
+            "elegant",
+            "athletic",
+            "vintage",
+            "modern",
+        }
         tags.style = validate_list(data.get("style", []), valid_styles)
 
         # Season
@@ -276,7 +349,9 @@ class AIService:
         else:
             tags.confidence = 0.5
 
-        logger.info(f"Parsed tags: type={tags.type}, color={tags.primary_color}, pattern={tags.pattern}")
+        logger.info(
+            f"Parsed tags: type={tags.type}, color={tags.primary_color}, pattern={tags.pattern}"
+        )
         return tags
 
     async def _call_with_fallback(
@@ -284,7 +359,7 @@ class AIService:
         messages: list,
         task_name: str,
         use_vision_model: bool = True,
-    ) -> tuple[Optional[str], Optional[Exception]]:
+    ) -> tuple[str | None, Exception | None]:
         """
         Call AI endpoint with retry and fallback logic.
 
@@ -297,6 +372,7 @@ class AIService:
             Tuple of (response_content, last_error)
         """
         import logging
+
         logger = logging.getLogger(__name__)
 
         last_error = None
@@ -323,7 +399,9 @@ class AIService:
                         content = data["choices"][0]["message"]["content"]
                         # Log model from response if available, fallback to configured model
                         used_model = data.get("model", model)
-                        logger.info(f"AI {task_name} successful via {endpoint.name} (model: {used_model})")
+                        logger.info(
+                            f"AI {task_name} successful via {endpoint.name} (model: {used_model})"
+                        )
                         return content, None
 
                     except httpx.HTTPStatusError as e:
@@ -410,51 +488,59 @@ class AIService:
             try:
                 async with httpx.AsyncClient(timeout=5) as client:
                     # Try OpenAI-compatible /v1/models endpoint first
-                    response = await client.get(f"{endpoint.url}/models", headers=self._get_headers())
+                    response = await client.get(
+                        f"{endpoint.url}/models", headers=self._get_headers()
+                    )
                     if response.status_code == 200:
                         data = response.json()
                         # OpenAI format: {"data": [{"id": "model-name", ...}]}
                         models = data.get("data", [])
                         model_names = [m.get("id", "") for m in models]
-                        endpoints_health.append({
-                            "name": endpoint.name,
-                            "url": endpoint.url,
-                            "status": "healthy",
-                            "vision_model": endpoint.vision_model,
-                            "text_model": endpoint.text_model,
-                            "available_models": model_names,
-                        })
+                        endpoints_health.append(
+                            {
+                                "name": endpoint.name,
+                                "url": endpoint.url,
+                                "status": "healthy",
+                                "vision_model": endpoint.vision_model,
+                                "text_model": endpoint.text_model,
+                                "available_models": model_names,
+                            }
+                        )
                         continue
 
                     # Fallback: Try Ollama-specific endpoint
-                    response = await client.get(
-                        endpoint.url.replace("/v1", "/api/tags")
-                    )
+                    response = await client.get(endpoint.url.replace("/v1", "/api/tags"))
                     if response.status_code == 200:
                         models = response.json().get("models", [])
                         model_names = [m.get("name", "") for m in models]
-                        endpoints_health.append({
-                            "name": endpoint.name,
-                            "url": endpoint.url,
-                            "status": "healthy",
-                            "vision_model": endpoint.vision_model,
-                            "text_model": endpoint.text_model,
-                            "available_models": model_names,
-                        })
+                        endpoints_health.append(
+                            {
+                                "name": endpoint.name,
+                                "url": endpoint.url,
+                                "status": "healthy",
+                                "vision_model": endpoint.vision_model,
+                                "text_model": endpoint.text_model,
+                                "available_models": model_names,
+                            }
+                        )
                     else:
-                        endpoints_health.append({
-                            "name": endpoint.name,
-                            "url": endpoint.url,
-                            "status": "unhealthy",
-                            "error": f"HTTP {response.status_code}",
-                        })
+                        endpoints_health.append(
+                            {
+                                "name": endpoint.name,
+                                "url": endpoint.url,
+                                "status": "unhealthy",
+                                "error": f"HTTP {response.status_code}",
+                            }
+                        )
             except Exception as e:
-                endpoints_health.append({
-                    "name": endpoint.name,
-                    "url": endpoint.url,
-                    "status": "unhealthy",
-                    "error": str(e),
-                })
+                endpoints_health.append(
+                    {
+                        "name": endpoint.name,
+                        "url": endpoint.url,
+                        "status": "unhealthy",
+                        "error": str(e),
+                    }
+                )
 
         # Overall status is healthy if at least one endpoint is healthy
         any_healthy = any(ep["status"] == "healthy" for ep in endpoints_health)
@@ -466,7 +552,7 @@ class AIService:
     async def generate_text(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         return_metadata: bool = False,
     ) -> str | TextGenerationResult:
         """
@@ -482,6 +568,7 @@ class AIService:
             Generated text response (str) or TextGenerationResult if return_metadata=True
         """
         import logging
+
         logger = logging.getLogger(__name__)
 
         messages = []
@@ -514,7 +601,9 @@ class AIService:
                         # Get model from response if available, fallback to configured model
                         used_model = data.get("model", endpoint.text_model)
                         content = data["choices"][0]["message"]["content"]
-                        logger.info(f"Text generation successful via {endpoint.name} (model: {used_model})")
+                        logger.info(
+                            f"Text generation successful via {endpoint.name} (model: {used_model})"
+                        )
 
                         if return_metadata:
                             return TextGenerationResult(
@@ -542,7 +631,7 @@ class AIService:
 
 
 # Singleton instance
-_ai_service: Optional[AIService] = None
+_ai_service: AIService | None = None
 
 
 def get_ai_service() -> AIService:

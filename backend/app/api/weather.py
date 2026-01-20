@@ -1,13 +1,11 @@
 import logging
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from app.models.user import User
 from app.services.weather_service import (
-    WeatherData,
-    WeatherService,
     WeatherServiceError,
     get_weather_service,
 )
@@ -56,8 +54,8 @@ class WeatherOverride(BaseModel):
 @router.get("/current", response_model=WeatherResponse)
 async def get_current_weather(
     current_user: Annotated[User, Depends(get_current_user)],
-    latitude: Optional[float] = Query(None, ge=-90, le=90),
-    longitude: Optional[float] = Query(None, ge=-180, le=180),
+    latitude: float | None = Query(None, ge=-90, le=90),
+    longitude: float | None = Query(None, ge=-180, le=180),
 ) -> WeatherResponse:
     # Use provided coordinates or fall back to user's location
     lat = latitude if latitude is not None else current_user.location_lat
@@ -78,7 +76,7 @@ async def get_current_weather(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Weather service temporarily unavailable",
-        )
+        ) from None
 
     return WeatherResponse(
         temperature=weather.temperature,
@@ -98,8 +96,8 @@ async def get_current_weather(
 @router.get("/forecast", response_model=ForecastResponse)
 async def get_weather_forecast(
     current_user: Annotated[User, Depends(get_current_user)],
-    latitude: Optional[float] = Query(None, ge=-90, le=90),
-    longitude: Optional[float] = Query(None, ge=-180, le=180),
+    latitude: float | None = Query(None, ge=-90, le=90),
+    longitude: float | None = Query(None, ge=-180, le=180),
     days: int = Query(7, ge=1, le=16),
 ) -> ForecastResponse:
     # Use provided coordinates or fall back to user's location
@@ -121,7 +119,7 @@ async def get_weather_forecast(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Weather service temporarily unavailable",
-        )
+        ) from None
 
     return ForecastResponse(
         latitude=float(lat),

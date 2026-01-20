@@ -41,7 +41,7 @@ async def sync_user(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from None
 
     # Generate JWT token for API authentication
     access_token = create_access_token(user.external_id)

@@ -1,8 +1,7 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import and_, select
@@ -40,8 +39,8 @@ class NotificationResult:
 
     channel: str
     status: DeliveryStatus
-    error: Optional[str] = None
-    response: Optional[dict] = None
+    error: str | None = None
+    response: dict | None = None
 
 
 class NotificationService:
@@ -62,7 +61,7 @@ class NotificationService:
 
     async def get_setting_by_id(
         self, setting_id: UUID, user_id: UUID
-    ) -> Optional[NotificationSettings]:
+    ) -> NotificationSettings | None:
         """Get a specific notification setting."""
         result = await self.db.execute(
             select(NotificationSettings).where(
@@ -106,10 +105,10 @@ class NotificationService:
         self,
         setting_id: UUID,
         user_id: UUID,
-        enabled: Optional[bool] = None,
-        priority: Optional[int] = None,
-        config: Optional[dict] = None,
-    ) -> Optional[NotificationSettings]:
+        enabled: bool | None = None,
+        priority: int | None = None,
+        config: dict | None = None,
+    ) -> NotificationSettings | None:
         """Update a notification setting."""
         setting = await self.get_setting_by_id(setting_id, user_id)
         if not setting:
@@ -202,7 +201,7 @@ class NotificationDispatcher:
             .where(
                 and_(
                     NotificationSettings.user_id == user_id,
-                    NotificationSettings.enabled == True,
+                    NotificationSettings.enabled.is_(True),
                 )
             )
             .order_by(NotificationSettings.priority)
@@ -238,12 +237,12 @@ class NotificationDispatcher:
                     channel=channel_config.channel,
                     status=NotificationStatus.sent,
                     payload={"occasion": outfit.occasion},
-                    sent_at=datetime.now(timezone.utc),
+                    sent_at=datetime.now(UTC),
                 )
                 self.db.add(notification)
 
                 # Update outfit status
-                outfit.sent_at = datetime.now(timezone.utc)
+                outfit.sent_at = datetime.now(UTC)
                 outfit.status = "sent"
 
                 await self.db.flush()
@@ -257,7 +256,7 @@ class NotificationDispatcher:
                 status=NotificationStatus.retrying,
                 payload={"occasion": outfit.occasion},
                 attempts=1,
-                last_attempt_at=datetime.now(timezone.utc),
+                last_attempt_at=datetime.now(UTC),
                 error_message=results[-1].error if results else "Unknown error",
             )
             self.db.add(notification)
@@ -297,7 +296,7 @@ class NotificationDispatcher:
                 and_(
                     NotificationSettings.user_id == notification.user_id,
                     NotificationSettings.channel == notification.channel,
-                    NotificationSettings.enabled == True,
+                    NotificationSettings.enabled.is_(True),
                 )
             )
         )
@@ -313,7 +312,11 @@ class NotificationDispatcher:
         return await self._send_via_channel(channel_config, outfit, user)
 
     async def _send_via_channel(
-        self, channel_config: NotificationSettings, outfit: Outfit, user: User, for_tomorrow: bool = False
+        self,
+        channel_config: NotificationSettings,
+        outfit: Outfit,
+        user: User,
+        for_tomorrow: bool = False,
     ) -> NotificationResult:
         """Send notification via specific channel."""
         try:
@@ -360,7 +363,9 @@ class NotificationDispatcher:
                 error=str(e),
             )
 
-    def _build_ntfy_notification(self, outfit: Outfit, user: User, for_tomorrow: bool = False) -> NtfyNotification:
+    def _build_ntfy_notification(
+        self, outfit: Outfit, user: User, for_tomorrow: bool = False
+    ) -> NtfyNotification:
         """Build ntfy notification from outfit."""
         # Weather info for title
         weather = outfit.weather_data or {}
@@ -422,7 +427,9 @@ class NotificationDispatcher:
             click=f"{self.app_url}/dashboard/history",
         )
 
-    def _build_mattermost_message(self, outfit: Outfit, user: User, for_tomorrow: bool = False) -> MattermostMessage:
+    def _build_mattermost_message(
+        self, outfit: Outfit, user: User, for_tomorrow: bool = False
+    ) -> MattermostMessage:
         """Build Mattermost message from outfit."""
         weather_text = ""
         if outfit.weather_data:
@@ -465,7 +472,9 @@ class NotificationDispatcher:
             attachments=[attachment],
         )
 
-    def _build_email_message(self, outfit: Outfit, user: User, for_tomorrow: bool = False) -> EmailMessage:
+    def _build_email_message(
+        self, outfit: Outfit, user: User, for_tomorrow: bool = False
+    ) -> EmailMessage:
         """Build email message from outfit."""
         weather_html = ""
         if outfit.weather_data:
@@ -473,7 +482,7 @@ class NotificationDispatcher:
             forecast_note = " (forecast)" if for_tomorrow else ""
             weather_html = f"""
             <p style="color: #6B7280; margin: 0;">
-                {weather.get('temperature', '?')}C, {weather.get('condition', 'Unknown')}{forecast_note}
+                {weather.get("temperature", "?")}C, {weather.get("condition", "Unknown")}{forecast_note}
             </p>
             """
 
@@ -487,8 +496,7 @@ class NotificationDispatcher:
 
         if highlights and isinstance(highlights, list):
             items_html = "".join(
-                f'<li style="color: #4B5563; margin: 5px 0;">{h}</li>'
-                for h in highlights[:3]
+                f'<li style="color: #4B5563; margin: 5px 0;">{h}</li>' for h in highlights[:3]
             )
             highlights_html = f"""
             <ul style="margin: 15px 0; padding-left: 20px;">
@@ -528,7 +536,7 @@ class NotificationDispatcher:
 
             <div style="background: #F3F4F6; border-radius: 8px; padding: 15px; margin: 20px 0;">
                 <p style="color: #1F2937; font-weight: 600; margin: 0 0 10px 0;">
-                    {outfit.reasoning or 'Your outfit is ready!'}
+                    {outfit.reasoning or "Your outfit is ready!"}
                 </p>
                 {highlights_html}
             </div>

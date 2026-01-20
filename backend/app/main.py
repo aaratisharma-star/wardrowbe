@@ -1,6 +1,6 @@
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -67,9 +67,7 @@ async def validation_exception_handler(
 
 
 @app.exception_handler(ValidationError)
-async def pydantic_validation_handler(
-    request: Request, exc: ValidationError
-) -> JSONResponse:
+async def pydantic_validation_handler(request: Request, exc: ValidationError) -> JSONResponse:
     """Handle Pydantic model validation errors."""
     errors = []
     for error in exc.errors():

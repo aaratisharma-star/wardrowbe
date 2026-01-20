@@ -78,14 +78,15 @@ async def get_analytics(
     now = datetime.utcnow()
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
-    trend_start = now - timedelta(days=days)
 
     # === Wardrobe Stats ===
     # Total items and status breakdown
     items_query = select(
         func.count(ClothingItem.id).label("total"),
         func.sum(case((ClothingItem.status == ItemStatus.ready, 1), else_=0)).label("ready"),
-        func.sum(case((ClothingItem.status == ItemStatus.processing, 1), else_=0)).label("processing"),
+        func.sum(case((ClothingItem.status == ItemStatus.processing, 1), else_=0)).label(
+            "processing"
+        ),
         func.sum(case((ClothingItem.status == ItemStatus.archived, 1), else_=0)).label("archived"),
         func.sum(case((ClothingItem.status == ItemStatus.error, 1), else_=0)).label("error"),
         func.sum(ClothingItem.wear_count).label("total_wears"),
@@ -204,13 +205,10 @@ async def get_analytics(
 
     # === Most/Least/Never Worn ===
     def wear_stats_query(order_desc: bool, limit: int, never_worn: bool = False):
-        q = (
-            select(ClothingItem)
-            .where(
-                and_(
-                    ClothingItem.user_id == current_user.id,
-                    ClothingItem.status == ItemStatus.ready,
-                )
+        q = select(ClothingItem).where(
+            and_(
+                ClothingItem.user_id == current_user.id,
+                ClothingItem.status == ItemStatus.ready,
             )
         )
         if never_worn:
@@ -252,7 +250,9 @@ async def get_analytics(
         for item in least_worn_result.scalars().all()
     ]
 
-    never_worn_result = await db.execute(wear_stats_query(order_desc=False, limit=5, never_worn=True))
+    never_worn_result = await db.execute(
+        wear_stats_query(order_desc=False, limit=5, never_worn=True)
+    )
     never_worn = [
         WearStats(
             id=item.id,
@@ -314,24 +314,38 @@ async def get_analytics(
     else:
         # Wardrobe insights
         if len(never_worn) > 0:
-            insights.append(f"You have {len(never_worn)} items you've never worn. Consider styling them!")
+            insights.append(
+                f"You have {len(never_worn)} items you've never worn. Consider styling them!"
+            )
 
         # Color insights
         if color_distribution:
             top_color = color_distribution[0].color
             if color_distribution[0].percentage > 40:
-                insights.append(f"Your wardrobe is heavy on {top_color} ({color_distribution[0].percentage}%). Consider adding variety!")
+                insights.append(
+                    f"Your wardrobe is heavy on {top_color} ({color_distribution[0].percentage}%). Consider adding variety!"
+                )
             elif len(color_distribution) <= 3 and ready_items > 10:
                 insights.append("Your wardrobe has limited color variety. Explore new colors!")
 
         # Type insights
         if type_distribution:
-            tops = sum(t.count for t in type_distribution if t.type in ["shirt", "blouse", "t-shirt", "top"])
-            bottoms = sum(t.count for t in type_distribution if t.type in ["pants", "jeans", "skirt", "shorts"])
+            tops = sum(
+                t.count
+                for t in type_distribution
+                if t.type in ["shirt", "blouse", "t-shirt", "top"]
+            )
+            bottoms = sum(
+                t.count
+                for t in type_distribution
+                if t.type in ["pants", "jeans", "skirt", "shorts"]
+            )
             if tops > 0 and bottoms > 0:
                 ratio = tops / bottoms
                 if ratio > 3:
-                    insights.append("You have many more tops than bottoms. Consider adding pants or skirts!")
+                    insights.append(
+                        "You have many more tops than bottoms. Consider adding pants or skirts!"
+                    )
                 elif ratio < 0.5:
                     insights.append("You have more bottoms than tops. Consider adding some shirts!")
 
@@ -340,10 +354,14 @@ async def get_analytics(
             if acceptance_rate > 80:
                 insights.append(f"Great taste! You accept {acceptance_rate:.0f}% of suggestions.")
             elif acceptance_rate < 50:
-                insights.append("You reject many suggestions. Consider updating your style preferences.")
+                insights.append(
+                    "You reject many suggestions. Consider updating your style preferences."
+                )
 
         if outfits_this_week == 0 and total_outfits > 0:
-            insights.append("You haven't generated any outfits this week. Try getting a suggestion!")
+            insights.append(
+                "You haven't generated any outfits this week. Try getting a suggestion!"
+            )
 
     return AnalyticsResponse(
         wardrobe=wardrobe_stats,

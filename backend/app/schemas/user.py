@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -9,11 +8,11 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 class UserBase(BaseModel):
     email: EmailStr
     display_name: str = Field(..., min_length=1, max_length=100)
-    avatar_url: Optional[str] = None
+    avatar_url: str | None = None
     timezone: str = Field(default="UTC", max_length=50)
-    location_lat: Optional[Decimal] = Field(None, ge=-90, le=90)
-    location_lon: Optional[Decimal] = Field(None, ge=-180, le=180)
-    location_name: Optional[str] = Field(None, max_length=100)
+    location_lat: Decimal | None = Field(None, ge=-90, le=90)
+    location_lon: Decimal | None = Field(None, ge=-180, le=180)
+    location_name: str | None = Field(None, max_length=100)
 
 
 class UserCreate(UserBase):
@@ -21,12 +20,12 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    display_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    avatar_url: Optional[str] = None
-    timezone: Optional[str] = Field(None, max_length=50)
-    location_lat: Optional[Decimal] = Field(None, ge=-90, le=90)
-    location_lon: Optional[Decimal] = Field(None, ge=-180, le=180)
-    location_name: Optional[str] = Field(None, max_length=100)
+    display_name: str | None = Field(None, min_length=1, max_length=100)
+    avatar_url: str | None = None
+    timezone: str | None = Field(None, max_length=50)
+    location_lat: Decimal | None = Field(None, ge=-90, le=90)
+    location_lon: Decimal | None = Field(None, ge=-180, le=180)
+    location_name: str | None = Field(None, max_length=100)
 
 
 class UserResponse(UserBase):
@@ -34,11 +33,11 @@ class UserResponse(UserBase):
 
     id: UUID
     external_id: str
-    family_id: Optional[UUID] = None
+    family_id: UUID | None = None
     role: str
     is_active: bool
     onboarding_completed: bool
-    last_login_at: Optional[datetime] = None
+    last_login_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -49,7 +48,7 @@ class UserSyncRequest(BaseModel):
     # (e.g., "username@example.com" when no real email is provided by the proxy)
     email: str = Field(..., description="Email address or system-generated placeholder")
     display_name: str = Field(..., min_length=1, max_length=100)
-    avatar_url: Optional[str] = None
+    avatar_url: str | None = None
 
 
 class UserSyncResponse(BaseModel):
@@ -68,5 +67,5 @@ class SessionUser(BaseModel):
     external_id: str
     email: str
     display_name: str
-    family_id: Optional[UUID] = None
+    family_id: UUID | None = None
     role: str

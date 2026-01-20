@@ -1,5 +1,3 @@
-import pytest
-
 from app.services.ai_service import AIService, ClothingTags
 
 
@@ -9,7 +7,7 @@ class TestTagParsing:
     def test_parse_valid_json(self):
         """Test parsing valid JSON response."""
         service = AIService()
-        response = '''
+        response = """
         {
             "type": "shirt",
             "primary_color": "blue",
@@ -19,7 +17,7 @@ class TestTagParsing:
             "formality": "casual",
             "confidence": 0.85
         }
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         assert tags.type == "shirt"
         assert tags.primary_color == "blue"
@@ -31,7 +29,7 @@ class TestTagParsing:
     def test_parse_json_in_markdown(self):
         """Test parsing JSON wrapped in markdown code block."""
         service = AIService()
-        response = '''
+        response = """
         Here's the analysis:
         ```json
         {
@@ -42,7 +40,7 @@ class TestTagParsing:
             "confidence": 0.9
         }
         ```
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         assert tags.type == "pants"
         assert tags.primary_color == "black"
@@ -51,25 +49,25 @@ class TestTagParsing:
     def test_parse_invalid_type(self):
         """Test that invalid type returns unknown."""
         service = AIService()
-        response = '''
+        response = """
         {
             "type": "invalid_type_xyz",
             "primary_color": "blue"
         }
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         assert tags.type == "unknown"
 
     def test_parse_invalid_color(self):
         """Test that invalid colors are filtered out."""
         service = AIService()
-        response = '''
+        response = """
         {
             "type": "shirt",
             "primary_color": "chartreuse",
             "colors": ["blue", "invalid_color", "black"]
         }
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         # Invalid colors should be removed
         assert tags.primary_color is None
@@ -80,12 +78,12 @@ class TestTagParsing:
     def test_parse_grey_to_gray(self):
         """Test that 'grey' is normalized to 'gray'."""
         service = AIService()
-        response = '''
+        response = """
         {
             "type": "shirt",
             "primary_color": "grey"
         }
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         assert tags.primary_color == "gray"
 
@@ -100,12 +98,12 @@ class TestTagParsing:
     def test_parse_confidence_out_of_range(self):
         """Test that out-of-range confidence is normalized."""
         service = AIService()
-        response = '''
+        response = """
         {
             "type": "shirt",
             "confidence": 1.5
         }
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         # Out of range confidence should default to 0.5
         assert tags.confidence == 0.5
@@ -113,24 +111,24 @@ class TestTagParsing:
     def test_parse_valid_formality(self):
         """Test parsing formality levels."""
         service = AIService()
-        response = '''
+        response = """
         {
             "type": "blazer",
             "formality": "business-casual"
         }
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         assert tags.formality == "business-casual"
 
     def test_parse_invalid_formality(self):
         """Test that invalid formality is None."""
         service = AIService()
-        response = '''
+        response = """
         {
             "type": "shirt",
             "formality": "ultra-super-formal"
         }
-        '''
+        """
         tags = service._parse_tags_from_response(response)
         assert tags.formality is None
 

@@ -1,5 +1,4 @@
-from datetime import date, datetime, timezone
-from typing import Optional
+from datetime import UTC, date, datetime
 from uuid import UUID
 
 from sqlalchemy import and_, func, or_, select
@@ -13,7 +12,7 @@ class ItemService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_by_id(self, item_id: UUID, user_id: UUID) -> Optional[ClothingItem]:
+    async def get_by_id(self, item_id: UUID, user_id: UUID) -> ClothingItem | None:
         result = await self.db.execute(
             select(ClothingItem).where(
                 and_(ClothingItem.id == item_id, ClothingItem.user_id == user_id)
@@ -75,10 +74,10 @@ class ItemService:
     async def get_ids_by_filter(
         self,
         user_id: UUID,
-        type_filter: Optional[str] = None,
-        search: Optional[str] = None,
+        type_filter: str | None = None,
+        search: str | None = None,
         is_archived: bool = False,
-        excluded_ids: Optional[list[UUID]] = None,
+        excluded_ids: list[UUID] | None = None,
     ) -> list[UUID]:
         query = select(ClothingItem.id).where(ClothingItem.user_id == user_id)
 
@@ -109,7 +108,7 @@ class ItemService:
         user_id: UUID,
         image_hash: str,
         threshold: int = 8,
-    ) -> Optional[ClothingItem]:
+    ) -> ClothingItem | None:
         """
         Find an existing item with a similar image hash.
 
@@ -123,7 +122,7 @@ class ItemService:
                 and_(
                     ClothingItem.user_id == user_id,
                     ClothingItem.image_hash == image_hash,
-                    ClothingItem.is_archived == False,
+                    ClothingItem.is_archived.is_(False),
                 )
             )
         )
@@ -187,10 +186,10 @@ class ItemService:
     async def archive(
         self,
         item: ClothingItem,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> ClothingItem:
         item.is_archived = True
-        item.archived_at = datetime.now(timezone.utc)
+        item.archived_at = datetime.now(UTC)
         item.archive_reason = reason
         item.status = ItemStatus.archived
         await self.db.flush()
@@ -210,9 +209,9 @@ class ItemService:
         self,
         item: ClothingItem,
         worn_at: date,
-        occasion: Optional[str] = None,
-        notes: Optional[str] = None,
-        outfit_id: Optional[UUID] = None,
+        occasion: str | None = None,
+        notes: str | None = None,
+        outfit_id: UUID | None = None,
     ) -> ItemHistory:
         # Create history entry
         history = ItemHistory(

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -11,7 +10,7 @@ class FamilyMember(BaseModel):
     id: UUID
     display_name: str
     email: str
-    avatar_url: Optional[str] = None
+    avatar_url: str | None = None
     role: str
     joined_at: datetime = Field(alias="created_at")
 
@@ -41,7 +40,7 @@ class FamilyCreate(BaseModel):
 
 
 class FamilyUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    name: str | None = Field(None, min_length=1, max_length=100)
 
 
 class FamilyCreateResponse(BaseModel):

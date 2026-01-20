@@ -1,9 +1,7 @@
 import json
 import logging
 import re
-from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import and_, select
@@ -12,7 +10,6 @@ from sqlalchemy.orm import selectinload
 
 from app.models.item import ClothingItem, ItemStatus
 from app.models.outfit import Outfit, OutfitItem, OutfitSource, OutfitStatus
-from app.models.preference import UserPreference
 from app.models.user import User
 from app.services.ai_service import AIService
 from app.utils.timezone import get_user_today
@@ -28,28 +25,26 @@ class PairingService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_source_item(self, user_id: UUID, item_id: UUID) -> Optional[ClothingItem]:
+    async def get_source_item(self, user_id: UUID, item_id: UUID) -> ClothingItem | None:
         result = await self.db.execute(
             select(ClothingItem).where(
                 and_(
                     ClothingItem.id == item_id,
                     ClothingItem.user_id == user_id,
                     ClothingItem.status == ItemStatus.ready,
-                    ClothingItem.is_archived == False,
+                    ClothingItem.is_archived.is_(False),
                 )
             )
         )
         return result.scalar_one_or_none()
 
-    async def get_available_items(
-        self, user: User, exclude_item_id: UUID
-    ) -> list[ClothingItem]:
+    async def get_available_items(self, user: User, exclude_item_id: UUID) -> list[ClothingItem]:
         """Get all available items for pairing (excluding the source item)."""
         query = select(ClothingItem).where(
             and_(
                 ClothingItem.user_id == user.id,
                 ClothingItem.status == ItemStatus.ready,
-                ClothingItem.is_archived == False,
+                ClothingItem.is_archived.is_(False),
                 ClothingItem.id != exclude_item_id,
             )
         )
@@ -118,8 +113,8 @@ class PairingService:
 
         def strip_comments(json_str: str) -> str:
             """Remove JavaScript-style comments from JSON string."""
-            json_str = re.sub(r'//[^\n]*', '', json_str)
-            json_str = re.sub(r'/\*[\s\S]*?\*/', '', json_str)
+            json_str = re.sub(r"//[^\n]*", "", json_str)
+            json_str = re.sub(r"/\*[\s\S]*?\*/", "", json_str)
             return json_str
 
         # Try direct JSON parse
@@ -366,7 +361,7 @@ class PairingService:
         user_id: UUID,
         page: int = 1,
         page_size: int = 20,
-        source_type: Optional[str] = None,
+        source_type: str | None = None,
     ) -> tuple[list[Outfit], int]:
         """Get all pairings for a user."""
         # Base conditions
@@ -406,9 +401,11 @@ class PairingService:
 
 class InsufficientItemsError(Exception):
     """Not enough items for pairing."""
+
     pass
 
 
 class AIGenerationError(Exception):
     """AI failed to generate pairings."""
+
     pass

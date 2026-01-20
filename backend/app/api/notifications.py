@@ -1,5 +1,4 @@
-from datetime import time, datetime, timedelta
-from typing import Optional
+from datetime import datetime, time, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -8,8 +7,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.utils.auth import get_current_user
-from app.models.notification import Notification, NotificationSettings
+from app.models.notification import Notification
 from app.models.schedule import Schedule
 from app.models.user import User
 from app.schemas.notification import (
@@ -24,6 +22,7 @@ from app.schemas.notification import (
     TestNotificationResponse,
 )
 from app.services.notification_service import NotificationService
+from app.utils.auth import get_current_user
 
 router = APIRouter()
 
@@ -107,6 +106,7 @@ async def get_ntfy_defaults():
     User only needs to set their topic - server and token are pre-filled.
     """
     from app.config import get_settings
+
     settings = get_settings()
     return {
         "server": settings.ntfy_server or "https://ntfy.sh",
@@ -136,7 +136,8 @@ async def create_notification_setting(
 ):
     """Create a new notification channel configuration."""
     from pydantic import ValidationError
-    from app.schemas.notification import NtfyConfig, MattermostConfig, EmailConfig
+
+    from app.schemas.notification import EmailConfig, MattermostConfig, NtfyConfig
 
     # Validate channel-specific config
     try:
@@ -147,7 +148,7 @@ async def create_notification_setting(
         elif data.channel == "email":
             EmailConfig(**data.config)
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e.errors()[0]["msg"]))
+        raise HTTPException(status_code=400, detail=str(e.errors()[0]["msg"])) from None
 
     service = NotificationService(db)
     try:
@@ -161,7 +162,7 @@ async def create_notification_setting(
         await db.commit()
         return setting
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 @router.get("/settings/{setting_id}", response_model=NotificationSettingsResponse)
@@ -187,7 +188,8 @@ async def update_notification_setting(
 ):
     """Update a notification channel configuration."""
     from pydantic import ValidationError
-    from app.schemas.notification import NtfyConfig, MattermostConfig, EmailConfig
+
+    from app.schemas.notification import EmailConfig, MattermostConfig, NtfyConfig
 
     service = NotificationService(db)
 
@@ -206,7 +208,7 @@ async def update_notification_setting(
             elif existing.channel == "email":
                 EmailConfig(**data.config)
         except ValidationError as e:
-            raise HTTPException(status_code=400, detail=str(e.errors()[0]["msg"]))
+            raise HTTPException(status_code=400, detail=str(e.errors()[0]["msg"])) from None
 
     setting = await service.update_setting(
         setting_id=setting_id,
@@ -268,9 +270,7 @@ async def list_schedules(
     except Exception:
         user_tz = ZoneInfo("UTC")
 
-    result = await db.execute(
-        select(Schedule).where(Schedule.user_id == current_user.id)
-    )
+    result = await db.execute(select(Schedule).where(Schedule.user_id == current_user.id))
     schedules = list(result.scalars().all())
 
     # Convert to local time and sort by local day
@@ -301,9 +301,7 @@ async def create_schedule(
 
     # Check if schedule for this day already exists (check the LOCAL day, not UTC day)
     # We need to check all schedules and see if any would show the same local day
-    existing = await db.execute(
-        select(Schedule).where(Schedule.user_id == current_user.id)
-    )
+    existing = await db.execute(select(Schedule).where(Schedule.user_id == current_user.id))
     for existing_schedule in existing.scalars().all():
         _, existing_local_day = utc_time_to_local(
             existing_schedule.notification_time, existing_schedule.day_of_week, user_tz

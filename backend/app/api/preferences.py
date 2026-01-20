@@ -22,17 +22,33 @@ def _build_preference_response(preferences) -> PreferenceResponse:
         "bold": 50,
     }
     return PreferenceResponse(
-        color_favorites=preferences.color_favorites if preferences.color_favorites is not None else [],
+        color_favorites=preferences.color_favorites
+        if preferences.color_favorites is not None
+        else [],
         color_avoid=preferences.color_avoid if preferences.color_avoid is not None else [],
-        style_profile=preferences.style_profile if preferences.style_profile is not None else default_style,
-        default_occasion=preferences.default_occasion if preferences.default_occasion is not None else "casual",
-        temperature_sensitivity=preferences.temperature_sensitivity if preferences.temperature_sensitivity is not None else "normal",
+        style_profile=preferences.style_profile
+        if preferences.style_profile is not None
+        else default_style,
+        default_occasion=preferences.default_occasion
+        if preferences.default_occasion is not None
+        else "casual",
+        temperature_sensitivity=preferences.temperature_sensitivity
+        if preferences.temperature_sensitivity is not None
+        else "normal",
         cold_threshold=preferences.cold_threshold if preferences.cold_threshold is not None else 10,
         hot_threshold=preferences.hot_threshold if preferences.hot_threshold is not None else 25,
-        layering_preference=preferences.layering_preference if preferences.layering_preference is not None else "moderate",
-        avoid_repeat_days=preferences.avoid_repeat_days if preferences.avoid_repeat_days is not None else 7,
-        prefer_underused_items=preferences.prefer_underused_items if preferences.prefer_underused_items is not None else True,
-        variety_level=preferences.variety_level if preferences.variety_level is not None else "moderate",
+        layering_preference=preferences.layering_preference
+        if preferences.layering_preference is not None
+        else "moderate",
+        avoid_repeat_days=preferences.avoid_repeat_days
+        if preferences.avoid_repeat_days is not None
+        else 7,
+        prefer_underused_items=preferences.prefer_underused_items
+        if preferences.prefer_underused_items is not None
+        else True,
+        variety_level=preferences.variety_level
+        if preferences.variety_level is not None
+        else "moderate",
         ai_endpoints=preferences.ai_endpoints if preferences.ai_endpoints is not None else [],
     )
 
@@ -116,7 +132,11 @@ async def test_ai_endpoint(
                 model_names = [m.get("name", "") for m in models]
 
                 # Categorize models
-                vision_models = [m for m in model_names if any(v in m.lower() for v in ["moondream", "llava", "bakllava", "vision"])]
+                vision_models = [
+                    m
+                    for m in model_names
+                    if any(v in m.lower() for v in ["moondream", "llava", "bakllava", "vision"])
+                ]
                 text_models = [m for m in model_names if m not in vision_models]
 
                 return {

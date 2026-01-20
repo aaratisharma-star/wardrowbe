@@ -71,9 +71,7 @@ async def regenerate_all():
 
     async with async_session() as db:
         # Get all items with images
-        result = await db.execute(
-            select(ClothingItem).where(ClothingItem.image_path.isnot(None))
-        )
+        result = await db.execute(select(ClothingItem).where(ClothingItem.image_path.isnot(None)))
         items = result.scalars().all()
 
         print(f"Found {len(items)} items to process")

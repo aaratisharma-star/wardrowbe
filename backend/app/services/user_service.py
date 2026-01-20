@@ -1,5 +1,4 @@
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -14,13 +13,13 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_by_id(self, user_id: UUID) -> Optional[User]:
+    async def get_by_id(self, user_id: UUID) -> User | None:
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
     async def get_by_external_id(
         self, external_id: str, load_preferences: bool = True
-    ) -> Optional[User]:
+    ) -> User | None:
         query = select(User).where(User.external_id == external_id)
 
         if load_preferences:
@@ -29,7 +28,7 @@ class UserService:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
@@ -80,7 +79,7 @@ class UserService:
                 existing_by_email.display_name = sync_data.display_name
                 if sync_data.avatar_url:
                     existing_by_email.avatar_url = sync_data.avatar_url
-                existing_by_email.last_login_at = datetime.now(timezone.utc)
+                existing_by_email.last_login_at = datetime.now(UTC)
                 await self.db.flush()
                 await self.db.refresh(existing_by_email)
                 return existing_by_email, False
@@ -91,7 +90,7 @@ class UserService:
                 email=sync_data.email,
                 display_name=sync_data.display_name,
                 avatar_url=sync_data.avatar_url,
-                last_login_at=datetime.now(timezone.utc),
+                last_login_at=datetime.now(UTC),
             )
             self.db.add(user)
             await self.db.flush()
@@ -110,13 +109,13 @@ class UserService:
             user.display_name = sync_data.display_name
             if sync_data.avatar_url:
                 user.avatar_url = sync_data.avatar_url
-            user.last_login_at = datetime.now(timezone.utc)
+            user.last_login_at = datetime.now(UTC)
             await self.db.flush()
             await self.db.refresh(user)
             return user, False
 
     async def update_last_login(self, user: User) -> None:
-        user.last_login_at = datetime.now(timezone.utc)
+        user.last_login_at = datetime.now(UTC)
         await self.db.flush()
 
     async def complete_onboarding(self, user: User) -> None:

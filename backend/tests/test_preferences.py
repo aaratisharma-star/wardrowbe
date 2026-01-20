@@ -1,26 +1,19 @@
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models import UserPreference
 
 
 class TestPreferencesEndpoints:
     """Tests for preferences API endpoints."""
 
     @pytest.mark.asyncio
-    async def test_get_preferences_not_found(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_get_preferences_not_found(self, client: AsyncClient, test_user, auth_headers):
         """Test getting preferences when none exist."""
         response = await client.get("/api/v1/users/me/preferences", headers=auth_headers)
         # Should return 404 or empty default
         assert response.status_code in [200, 404]
 
     @pytest.mark.asyncio
-    async def test_create_preferences(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_create_preferences(self, client: AsyncClient, test_user, auth_headers):
         """Test creating user preferences."""
         response = await client.patch(
             "/api/v1/users/me/preferences",
@@ -56,9 +49,7 @@ class TestAIEndpointPreferences:
     """Tests for AI endpoint configuration in preferences."""
 
     @pytest.mark.asyncio
-    async def test_configure_ai_endpoint(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_configure_ai_endpoint(self, client: AsyncClient, test_user, auth_headers):
         """Test configuring custom AI endpoint."""
         response = await client.patch(
             "/api/v1/users/me/preferences",
@@ -100,9 +91,7 @@ class TestPreferenceValidation:
     """Tests for preference validation."""
 
     @pytest.mark.asyncio
-    async def test_invalid_formality_rejected(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_invalid_formality_rejected(self, client: AsyncClient, test_user, auth_headers):
         """Test that invalid formality values are rejected."""
         response = await client.patch(
             "/api/v1/users/me/preferences",
@@ -115,9 +104,7 @@ class TestPreferenceValidation:
         assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
-    async def test_empty_preferences_allowed(
-        self, client: AsyncClient, test_user, auth_headers
-    ):
+    async def test_empty_preferences_allowed(self, client: AsyncClient, test_user, auth_headers):
         """Test that empty/minimal preferences are accepted."""
         response = await client.patch(
             "/api/v1/users/me/preferences",

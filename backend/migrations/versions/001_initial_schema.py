@@ -5,7 +5,8 @@ Revises:
 Create Date: 2024-01-16
 
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -13,9 +14,9 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "001_initial_schema"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -118,7 +119,9 @@ def upgrade() -> None:
         sa.Column("avoid_repeat_days", sa.Integer, nullable=True, server_default="7"),
         sa.Column("prefer_underused_items", sa.Boolean, nullable=True, server_default="true"),
         sa.Column("variety_level", sa.String(20), nullable=True, server_default="moderate"),
-        sa.Column("excluded_item_ids", postgresql.ARRAY(postgresql.UUID(as_uuid=True)), nullable=True),
+        sa.Column(
+            "excluded_item_ids", postgresql.ARRAY(postgresql.UUID(as_uuid=True)), nullable=True
+        ),
         sa.Column("excluded_combinations", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column(
             "created_at",
@@ -205,7 +208,9 @@ def upgrade() -> None:
         sa.Column("primary_color", sa.String(50), nullable=True),
         sa.Column(
             "status",
-            postgresql.ENUM("processing", "ready", "error", "archived", name="item_status", create_type=False),
+            postgresql.ENUM(
+                "processing", "ready", "error", "archived", name="item_status", create_type=False
+            ),
             nullable=False,
             server_default="processing",
         ),
@@ -243,7 +248,9 @@ def upgrade() -> None:
     op.create_index("idx_clothing_items_user_id", "clothing_items", ["user_id"])
     op.create_index("idx_clothing_items_user_type", "clothing_items", ["user_id", "type"])
     op.create_index("idx_clothing_items_user_status", "clothing_items", ["user_id", "status"])
-    op.create_index("idx_clothing_items_colors", "clothing_items", ["colors"], postgresql_using="gin")
+    op.create_index(
+        "idx_clothing_items_colors", "clothing_items", ["colors"], postgresql_using="gin"
+    )
     op.create_index("idx_clothing_items_tags", "clothing_items", ["tags"], postgresql_using="gin")
 
     # Create outfits table
@@ -260,7 +267,12 @@ def upgrade() -> None:
         sa.Column(
             "status",
             postgresql.ENUM(
-                "pending", "sent", "viewed", "accepted", "rejected", "expired",
+                "pending",
+                "sent",
+                "viewed",
+                "accepted",
+                "rejected",
+                "expired",
                 name="outfit_status",
                 create_type=False,
             ),
@@ -270,7 +282,9 @@ def upgrade() -> None:
         sa.Column(
             "source",
             postgresql.ENUM(
-                "scheduled", "on_demand", "manual",
+                "scheduled",
+                "on_demand",
+                "manual",
                 name="outfit_source",
                 create_type=False,
             ),
@@ -369,7 +383,11 @@ def upgrade() -> None:
         sa.Column(
             "status",
             postgresql.ENUM(
-                "pending", "sent", "delivered", "failed", "retrying",
+                "pending",
+                "sent",
+                "delivered",
+                "failed",
+                "retrying",
                 name="notification_status",
                 create_type=False,
             ),

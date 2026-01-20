@@ -1,7 +1,6 @@
 import secrets
 import string
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
@@ -28,7 +27,7 @@ class FamilyService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_by_id(self, family_id: UUID) -> Optional[Family]:
+    async def get_by_id(self, family_id: UUID) -> Family | None:
         result = await self.db.execute(
             select(Family)
             .where(Family.id == family_id)
@@ -36,13 +35,13 @@ class FamilyService:
         )
         return result.scalar_one_or_none()
 
-    async def get_by_invite_code(self, invite_code: str) -> Optional[Family]:
+    async def get_by_invite_code(self, invite_code: str) -> Family | None:
         result = await self.db.execute(
             select(Family).where(Family.invite_code == invite_code.upper())
         )
         return result.scalar_one_or_none()
 
-    async def get_user_family(self, user: User) -> Optional[Family]:
+    async def get_user_family(self, user: User) -> Family | None:
         """Get the family a user belongs to with members and invites."""
         if user.family_id is None:
             return None
@@ -90,7 +89,7 @@ class FamilyService:
         await self.db.flush()
         return new_code
 
-    async def join_family(self, user: User, invite_code: str) -> Optional[Family]:
+    async def join_family(self, user: User, invite_code: str) -> Family | None:
         """
         Join a family using invite code.
         Returns the family if successful, None if code invalid.
@@ -149,7 +148,7 @@ class FamilyService:
 
     async def update_member_role(
         self, family: Family, member_id: UUID, new_role: str
-    ) -> Optional[User]:
+    ) -> User | None:
         """Update a member's role."""
         result = await self.db.execute(
             select(User).where(User.id == member_id, User.family_id == family.id)
@@ -179,7 +178,7 @@ class FamilyService:
         existing = result.scalar_one_or_none()
         if existing:
             # Update expiration
-            existing.expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+            existing.expires_at = datetime.now(UTC) + timedelta(days=7)
             existing.token = generate_invite_token()
             await self.db.flush()
             await self.db.refresh(existing)
@@ -191,18 +190,16 @@ class FamilyService:
             token=generate_invite_token(),
             invited_by=inviter.id,
             role=invite_data.role,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=7),
+            expires_at=datetime.now(UTC) + timedelta(days=7),
         )
         self.db.add(invite)
         await self.db.flush()
         await self.db.refresh(invite)
         return invite
 
-    async def get_invite_by_id(self, invite_id: UUID) -> Optional[FamilyInvite]:
+    async def get_invite_by_id(self, invite_id: UUID) -> FamilyInvite | None:
         """Get an invite by ID."""
-        result = await self.db.execute(
-            select(FamilyInvite).where(FamilyInvite.id == invite_id)
-        )
+        result = await self.db.execute(select(FamilyInvite).where(FamilyInvite.id == invite_id))
         return result.scalar_one_or_none()
 
     async def cancel_invite(self, invite: FamilyInvite) -> None:
@@ -216,7 +213,7 @@ class FamilyService:
             select(FamilyInvite).where(
                 FamilyInvite.family_id == family.id,
                 FamilyInvite.accepted_at.is_(None),
-                FamilyInvite.expires_at > datetime.now(timezone.utc),
+                FamilyInvite.expires_at > datetime.now(UTC),
             )
         )
         return list(result.scalars().all())

@@ -22,12 +22,8 @@ class UserPreference(Base):
     )
 
     # Color preferences
-    color_favorites: Mapped[list[str]] = mapped_column(
-        ARRAY(String), default=list
-    )
-    color_avoid: Mapped[list[str]] = mapped_column(
-        ARRAY(String), default=list
-    )
+    color_favorites: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    color_avoid: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
     # Style preferences
     style_profile: Mapped[dict] = mapped_column(JSONB, default=dict)
@@ -57,9 +53,7 @@ class UserPreference(Base):
     # Each endpoint: {url, vision_model, text_model, name, enabled}
     ai_endpoints: Mapped[list] = mapped_column(JSONB, default=list)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import List, Optional
 
 from pydantic import Field, PostgresDsn, RedisDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,7 +17,7 @@ class Settings(BaseSettings):
     secret_key: str = Field(default="change-me-in-production")
 
     # CORS
-    cors_origins: List[str] = Field(default=["http://localhost:3000"])
+    cors_origins: list[str] = Field(default=["http://localhost:3000"])
 
     # Database
     database_url: PostgresDsn = Field(
@@ -30,9 +29,9 @@ class Settings(BaseSettings):
     redis_url: RedisDsn = Field(default="redis://localhost:6379/0")
 
     # Authentication (Authentik)
-    authentik_url: Optional[str] = None
-    authentik_client_id: Optional[str] = None
-    authentik_client_secret: Optional[str] = None
+    authentik_url: str | None = None
+    authentik_client_id: str | None = None
+    authentik_client_secret: str | None = None
 
     # Forward Auth (TinyAuth, Authelia, etc.)
     # When True, trusts Remote-User/Remote-Email headers from proxy
@@ -40,7 +39,7 @@ class Settings(BaseSettings):
 
     # AI Service (OpenAI-compatible API - supports OpenAI, Ollama, LocalAI, etc.)
     ai_base_url: str = Field(default="")
-    ai_api_key: Optional[str] = Field(default=None)  # API key for authenticated AI endpoints
+    ai_api_key: str | None = Field(default=None)  # API key for authenticated AI endpoints
     ai_vision_model: str = Field(default="gpt-4o")  # For image analysis
     ai_text_model: str = Field(default="gpt-4o")  # For text generation (recommendations)
     ai_timeout: int = Field(default=120)
@@ -50,15 +49,15 @@ class Settings(BaseSettings):
     openmeteo_url: str = Field(default="https://api.open-meteo.com/v1")
 
     # Notifications - default ntfy channel (used when user has none configured)
-    ntfy_server: Optional[str] = None
-    ntfy_topic: Optional[str] = None
-    ntfy_token: Optional[str] = None
+    ntfy_server: str | None = None
+    ntfy_topic: str | None = None
+    ntfy_token: str | None = None
     # Legacy/other providers
-    mattermost_webhook_url: Optional[str] = None
-    smtp_host: Optional[str] = None
+    mattermost_webhook_url: str | None = None
+    smtp_host: str | None = None
     smtp_port: int = 587
-    smtp_user: Optional[str] = None
-    smtp_password: Optional[str] = None
+    smtp_user: str | None = None
+    smtp_password: str | None = None
 
     # Storage
     storage_path: str = Field(default="/data/wardrobe")

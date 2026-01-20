@@ -1,5 +1,4 @@
-from typing import Annotated, Optional
-from uuid import UUID
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -44,13 +43,13 @@ def decode_token(token: str) -> TokenPayload:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from None
 
 
 async def get_current_user_optional(
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(bearer_scheme)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> Optional[User]:
+) -> User | None:
     """
     Get current user from JWT token if provided.
     Returns None if no token or invalid token.
@@ -68,7 +67,7 @@ async def get_current_user_optional(
 
 async def get_current_user(
     request: Request,
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(bearer_scheme)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """
@@ -101,6 +100,7 @@ async def get_current_user(
             # Sync user data from forward auth headers
             # This creates new users and updates existing ones
             from app.schemas.user import UserSyncRequest
+
             sync_data = UserSyncRequest(
                 external_id=remote_user,
                 email=remote_email or (user.email if user else f"{remote_user}@example.com"),
@@ -146,5 +146,5 @@ async def get_current_session(
 
 # Type aliases for dependency injection
 CurrentUser = Annotated[User, Depends(get_current_user)]
-CurrentUserOptional = Annotated[Optional[User], Depends(get_current_user_optional)]
+CurrentUserOptional = Annotated[User | None, Depends(get_current_user_optional)]
 CurrentSession = Annotated[AuthSession, Depends(get_current_session)]

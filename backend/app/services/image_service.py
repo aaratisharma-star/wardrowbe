@@ -1,10 +1,7 @@
-import hashlib
-import os
 import uuid
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
 
 import imagehash
 from PIL import Image
@@ -34,7 +31,7 @@ ALLOWED_MIME_TYPES = {
 
 
 class ImageService:
-    def __init__(self, storage_path: Optional[str] = None):
+    def __init__(self, storage_path: str | None = None):
         self.storage_path = Path(storage_path or settings.storage_path)
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
@@ -53,6 +50,7 @@ class ImageService:
         """Convert HEIC/HEIF to PIL Image."""
         try:
             from pillow_heif import register_heif_opener
+
             register_heif_opener()
         except ImportError:
             pass
@@ -155,7 +153,7 @@ class ImageService:
         """Get full path for an image."""
         return self.storage_path / relative_path
 
-    def delete_images(self, paths: dict[str, Optional[str]]) -> None:
+    def delete_images(self, paths: dict[str, str | None]) -> None:
         """Delete all image files for an item."""
         for path in paths.values():
             if path:
@@ -251,7 +249,6 @@ class ImageService:
         # Medium: user_id/filename_medium.jpg
         # Thumbnail: user_id/filename_thumb.jpg
         base_path = image_path.rsplit(".", 1)[0]  # Remove extension
-        user_id = image_path.split("/")[0]
 
         original_full = self.storage_path / image_path
         medium_path = f"{base_path}_medium.jpg"

@@ -93,9 +93,7 @@ class TestItemList:
             db_session.add(item)
         await db_session.commit()
 
-        response = await client.get(
-            "/api/v1/items", params={"type": "shirt"}, headers=auth_headers
-        )
+        response = await client.get("/api/v1/items", params={"type": "shirt"}, headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert len(data["items"]) == 2
@@ -238,9 +236,7 @@ class TestItemArchive:
         await db_session.commit()
         await db_session.refresh(item)
 
-        response = await client.post(
-            f"/api/v1/items/{item.id}/restore", headers=auth_headers
-        )
+        response = await client.post(f"/api/v1/items/{item.id}/restore", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["is_archived"] is False

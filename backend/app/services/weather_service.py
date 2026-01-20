@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
 
 import httpx
 
@@ -107,7 +106,7 @@ class WeatherCache:
         for key in expired:
             del self._cache[key]
 
-    def get(self, lat: float, lon: float) -> Optional[WeatherData]:
+    def get(self, lat: float, lon: float) -> WeatherData | None:
         """Get cached weather data if not expired."""
         key = self._cache_key(lat, lon)
         if key in self._cache:
@@ -209,7 +208,7 @@ class WeatherService:
                 data = response.json()
             except httpx.HTTPError as e:
                 logger.error(f"Weather API error: {e}")
-                raise WeatherServiceError(f"Failed to fetch weather: {e}")
+                raise WeatherServiceError(f"Failed to fetch weather: {e}") from None
 
         current = data.get("current", {})
         hourly = data.get("hourly", {})
@@ -284,7 +283,7 @@ class WeatherService:
                 data = response.json()
             except httpx.HTTPError as e:
                 logger.error(f"Weather API error: {e}")
-                raise WeatherServiceError(f"Failed to fetch forecast: {e}")
+                raise WeatherServiceError(f"Failed to fetch forecast: {e}") from None
 
         daily = data.get("daily", {})
         dates = daily.get("time", [])
@@ -309,9 +308,7 @@ class WeatherService:
 
         return forecasts
 
-    async def get_tomorrow_weather(
-        self, latitude: float, longitude: float
-    ) -> WeatherData:
+    async def get_tomorrow_weather(self, latitude: float, longitude: float) -> WeatherData:
         """
         Fetch tomorrow's weather forecast and return as WeatherData.
 
@@ -377,7 +374,7 @@ class WeatherServiceError(Exception):
 
 
 # Singleton instance
-_weather_service: Optional[WeatherService] = None
+_weather_service: WeatherService | None = None
 
 
 def get_weather_service() -> WeatherService:

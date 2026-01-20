@@ -1,4 +1,3 @@
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -8,8 +7,8 @@ class TokenPayload(BaseModel):
     sub: str  # Subject (external_id from OIDC)
     exp: int  # Expiration timestamp
     iat: int  # Issued at timestamp
-    email: Optional[str] = None
-    name: Optional[str] = None
+    email: str | None = None
+    name: str | None = None
 
 
 class AuthSession(BaseModel):
@@ -17,6 +16,6 @@ class AuthSession(BaseModel):
     external_id: str
     email: str
     display_name: str
-    family_id: Optional[UUID] = None
+    family_id: UUID | None = None
     role: str
     is_authenticated: bool = True

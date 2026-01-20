@@ -1,7 +1,6 @@
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 import httpx
 
@@ -18,9 +17,9 @@ class NtfyNotification:
     message: str
     tags: list[str] = field(default_factory=list)
     priority: int = 3  # 1-5, 3 is default
-    click: Optional[str] = None
-    attach: Optional[str] = None
-    actions: Optional[list[dict]] = None
+    click: str | None = None
+    attach: str | None = None
+    actions: list[dict] | None = None
 
 
 class NtfyProvider:
@@ -98,8 +97,8 @@ class MattermostAttachment:
     text: str = ""
     color: str = "#3B82F6"
     fields: list[dict] = field(default_factory=list)
-    thumb_url: Optional[str] = None
-    image_url: Optional[str] = None
+    thumb_url: str | None = None
+    image_url: str | None = None
     actions: list[dict] = field(default_factory=list)
 
 
@@ -201,9 +200,10 @@ class EmailProvider:
             return {"success": False, "error": "SMTP not configured"}
 
         try:
-            import aiosmtplib
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
+
+            import aiosmtplib
 
             msg = MIMEMultipart("alternative")
             msg["Subject"] = message.subject

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -21,22 +21,22 @@ class UserProfileResponse(BaseModel):
     id: str
     email: str
     display_name: str
-    avatar_url: Optional[str] = None
+    avatar_url: str | None = None
     timezone: str
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
-    location_name: Optional[str] = None
-    family_id: Optional[str] = None
+    location_lat: float | None = None
+    location_lon: float | None = None
+    location_name: str | None = None
+    family_id: str | None = None
     role: str
     onboarding_completed: bool
 
 
 class UserProfileUpdate(BaseModel):
-    display_name: Optional[str] = None
-    timezone: Optional[str] = None
-    location_lat: Optional[Decimal] = None
-    location_lon: Optional[Decimal] = None
-    location_name: Optional[str] = None
+    display_name: str | None = None
+    timezone: str | None = None
+    location_lat: Decimal | None = None
+    location_lon: Decimal | None = None
+    location_name: str | None = None
 
 
 @router.get("", response_model=UserProfileResponse)

@@ -135,13 +135,16 @@ async def tag_item_image(ctx: dict, item_id: str, image_path: str) -> dict[str, 
             if item:
                 # Get user's preferences for AI endpoints
                 from app.models.preference import UserPreference
+
                 pref_result = await db.execute(
                     select(UserPreference).where(UserPreference.user_id == item.user_id)
                 )
                 prefs = pref_result.scalar_one_or_none()
                 if prefs and prefs.ai_endpoints:
                     ai_endpoints = prefs.ai_endpoints
-                    logger.info(f"Using {len(ai_endpoints)} custom AI endpoints for user {item.user_id}")
+                    logger.info(
+                        f"Using {len(ai_endpoints)} custom AI endpoints for user {item.user_id}"
+                    )
         finally:
             await db.close()
 
@@ -149,7 +152,9 @@ async def tag_item_image(ctx: dict, item_id: str, image_path: str) -> dict[str, 
         ai_service = AIService(endpoints=ai_endpoints)
         tags = await ai_service.analyze_image(path)
 
-        logger.info(f"AI analysis complete for item {item_id}: type={tags.type}, color={tags.primary_color}")
+        logger.info(
+            f"AI analysis complete for item {item_id}: type={tags.type}, color={tags.primary_color}"
+        )
 
         # Update item in database
         db = await get_db_session()
@@ -168,22 +173,34 @@ async def tag_item_image(ctx: dict, item_id: str, image_path: str) -> dict[str, 
 
             for field, value in ai_fields.items():
                 # Always update AI metadata fields (including tags JSONB and description)
-                if field in ('ai_processed', 'ai_confidence', 'status', 'ai_raw_response', 'tags', 'ai_description'):
+                if field in (
+                    "ai_processed",
+                    "ai_confidence",
+                    "status",
+                    "ai_raw_response",
+                    "tags",
+                    "ai_description",
+                ):
                     setattr(item, field, value)
                 # Only update content fields if user hasn't set them (or they're default/unknown)
-                elif field == 'type':
-                    if not item.type or item.type == 'unknown':
+                elif field == "type":
+                    if not item.type or item.type == "unknown":
                         setattr(item, field, value)
-                elif field == 'subtype':
+                elif field == "subtype":
                     if not item.subtype:
                         setattr(item, field, value)
-                elif field == 'primary_color':
-                    if not item.primary_color or item.primary_color == 'unknown':
+                elif field == "primary_color":
+                    if not item.primary_color or item.primary_color == "unknown":
                         setattr(item, field, value)
                 else:
                     # For other fields (colors, pattern, material, style, etc.), only set if not already set
                     current_value = getattr(item, field, None)
-                    if current_value is None or current_value == [] or current_value == '' or current_value == {}:
+                    if (
+                        current_value is None
+                        or current_value == []
+                        or current_value == ""
+                        or current_value == {}
+                    ):
                         setattr(item, field, value)
 
             await db.commit()
@@ -223,10 +240,11 @@ class WorkerSettings:
 
     # Import notification functions
     from arq import cron
+
     from app.workers.notifications import (
-        send_notification,
-        retry_failed_notifications,
         check_scheduled_notifications,
+        retry_failed_notifications,
+        send_notification,
     )
 
     functions = [
@@ -248,6 +266,7 @@ class WorkerSettings:
 
     # Import redis settings
     from app.workers.settings import get_redis_settings
+
     redis_settings = get_redis_settings()
 
     # Worker configuration

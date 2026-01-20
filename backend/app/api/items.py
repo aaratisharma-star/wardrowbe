@@ -1,12 +1,12 @@
 import logging
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 from uuid import UUID
 
 from arq import create_pool
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
-from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.database import get_db
 from app.models.user import User
 from app.schemas.item import (
@@ -28,7 +28,6 @@ from app.services.image_service import ImageService
 from app.services.item_service import ItemService
 from app.utils.auth import get_current_user
 from app.workers.settings import get_redis_settings
-from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -42,13 +41,13 @@ async def list_items(
     current_user: Annotated[User, Depends(get_current_user)],
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    type: Optional[str] = None,
-    subtype: Optional[str] = None,
-    colors: Optional[str] = None,
-    status: Optional[str] = None,
-    favorite: Optional[bool] = None,
+    type: str | None = None,
+    subtype: str | None = None,
+    colors: str | None = None,
+    status: str | None = None,
+    favorite: bool | None = None,
     is_archived: bool = False,
-    search: Optional[str] = None,
+    search: str | None = None,
 ) -> ItemListResponse:
     # Parse colors from comma-separated string
     color_list = colors.split(",") if colors else None
@@ -85,13 +84,13 @@ async def create_item(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     image: UploadFile = File(...),
-    type: Optional[str] = Form(None),  # Optional - AI will detect if not provided
-    subtype: Optional[str] = Form(None),
-    name: Optional[str] = Form(None),
-    brand: Optional[str] = Form(None),
-    notes: Optional[str] = Form(None),
-    colors: Optional[str] = Form(None),
-    primary_color: Optional[str] = Form(None),
+    type: str | None = Form(None),  # Optional - AI will detect if not provided
+    subtype: str | None = Form(None),
+    name: str | None = Form(None),
+    brand: str | None = Form(None),
+    notes: str | None = Form(None),
+    colors: str | None = Form(None),
+    primary_color: str | None = Form(None),
     favorite: bool = Form(False),
 ) -> ItemResponse:
     # Validate and process image
@@ -133,7 +132,7 @@ async def create_item(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from None
 
     # Parse colors from comma-separated string
     color_list = colors.split(",") if colors else None
@@ -224,24 +223,30 @@ async def bulk_create_items(
                 content_type = upload_file.content_type or "application/octet-stream"
 
                 if not image_service.validate_image(content, content_type):
-                    results.append(BulkUploadResult(
-                        filename=filename,
-                        success=False,
-                        error="Invalid image format. Supported: JPEG, PNG, WebP, HEIC",
-                    ))
+                    results.append(
+                        BulkUploadResult(
+                            filename=filename,
+                            success=False,
+                            error="Invalid image format. Supported: JPEG, PNG, WebP, HEIC",
+                        )
+                    )
                     failed += 1
                     continue
 
                 # Check for duplicates BEFORE storing
                 try:
                     image_hash = image_service.compute_phash(content, filename)
-                    existing = await item_service.find_duplicate_by_hash(current_user.id, image_hash)
+                    existing = await item_service.find_duplicate_by_hash(
+                        current_user.id, image_hash
+                    )
                     if existing:
-                        results.append(BulkUploadResult(
-                            filename=filename,
-                            success=False,
-                            error=f"Duplicate image - already exists in wardrobe",
-                        ))
+                        results.append(
+                            BulkUploadResult(
+                                filename=filename,
+                                success=False,
+                                error="Duplicate image - already exists in wardrobe",
+                            )
+                        )
                         failed += 1
                         continue
                 except Exception as e:
@@ -277,27 +282,33 @@ async def bulk_create_items(
                     except Exception as e:
                         logger.error(f"Failed to queue AI tagging for {item.id}: {e}")
 
-                results.append(BulkUploadResult(
-                    filename=filename,
-                    success=True,
-                    item=ItemResponse.model_validate(item),
-                ))
+                results.append(
+                    BulkUploadResult(
+                        filename=filename,
+                        success=True,
+                        item=ItemResponse.model_validate(item),
+                    )
+                )
                 successful += 1
 
             except ValueError as e:
-                results.append(BulkUploadResult(
-                    filename=filename,
-                    success=False,
-                    error=str(e),
-                ))
+                results.append(
+                    BulkUploadResult(
+                        filename=filename,
+                        success=False,
+                        error=str(e),
+                    )
+                )
                 failed += 1
             except Exception as e:
                 logger.error(f"Error processing {filename}: {e}")
-                results.append(BulkUploadResult(
-                    filename=filename,
-                    success=False,
-                    error="Failed to process image",
-                ))
+                results.append(
+                    BulkUploadResult(
+                        filename=filename,
+                        success=False,
+                        error="Failed to process image",
+                    )
+                )
                 failed += 1
     finally:
         if redis:
@@ -341,7 +352,9 @@ async def bulk_delete_items(
             user_id=current_user.id,
             type_filter=request.filters.type if request.filters else None,
             search=request.filters.search if request.filters else None,
-            is_archived=request.filters.is_archived if request.filters and request.filters.is_archived is not None else False,
+            is_archived=request.filters.is_archived
+            if request.filters and request.filters.is_archived is not None
+            else False,
             excluded_ids=list(request.excluded_ids) if request.excluded_ids else None,
         )
         logger.info(f"Bulk delete select_all: {len(item_ids)} items to delete")
@@ -357,11 +370,13 @@ async def bulk_delete_items(
                 continue
 
             # Delete images
-            image_service.delete_images({
-                "image_path": item.image_path,
-                "medium_path": item.medium_path,
-                "thumbnail_path": item.thumbnail_path,
-            })
+            image_service.delete_images(
+                {
+                    "image_path": item.image_path,
+                    "medium_path": item.medium_path,
+                    "thumbnail_path": item.thumbnail_path,
+                }
+            )
 
             await item_service.delete(item)
             deleted += 1
@@ -404,7 +419,9 @@ async def bulk_analyze_items(
             user_id=current_user.id,
             type_filter=request.filters.type if request.filters else None,
             search=request.filters.search if request.filters else None,
-            is_archived=request.filters.is_archived if request.filters and request.filters.is_archived is not None else False,
+            is_archived=request.filters.is_archived
+            if request.filters and request.filters.is_archived is not None
+            else False,
             excluded_ids=list(request.excluded_ids) if request.excluded_ids else None,
         )
         logger.info(f"Bulk analyze select_all: {len(item_ids)} items to analyze")
@@ -439,7 +456,7 @@ async def bulk_analyze_items(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to connect to job queue",
-        )
+        ) from None
 
     try:
         for item in items_to_process:
@@ -540,11 +557,13 @@ async def delete_item(
 
     # Delete images
     image_service = ImageService()
-    image_service.delete_images({
-        "image_path": item.image_path,
-        "medium_path": item.medium_path,
-        "thumbnail_path": item.thumbnail_path,
-    })
+    image_service.delete_images(
+        {
+            "image_path": item.image_path,
+            "medium_path": item.medium_path,
+            "thumbnail_path": item.thumbnail_path,
+        }
+    )
 
     await item_service.delete(item)
 
@@ -662,6 +681,7 @@ async def trigger_ai_analysis(
     try:
         # Set item status to processing so UI shows feedback
         from app.models.item import ItemStatus
+
         item.status = ItemStatus.processing
         await db.commit()
 
@@ -683,7 +703,7 @@ async def trigger_ai_analysis(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to queue AI analysis",
-        )
+        ) from None
 
 
 @router.post("/{item_id}/rotate", response_model=ItemResponse)
@@ -691,7 +711,9 @@ async def rotate_item_image(
     item_id: UUID,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-    direction: Literal["cw", "ccw"] = Query("cw", description="Rotation direction: cw (clockwise) or ccw (counter-clockwise)"),
+    direction: Literal["cw", "ccw"] = Query(
+        "cw", description="Rotation direction: cw (clockwise) or ccw (counter-clockwise)"
+    ),
 ) -> ItemResponse:
     item_service = ItemService(db)
     item = await item_service.get_by_id(item_id, current_user.id)
@@ -718,10 +740,10 @@ async def rotate_item_image(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from None
     except Exception as e:
         logger.error(f"Failed to rotate image: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to rotate image",
-        )
+        ) from None

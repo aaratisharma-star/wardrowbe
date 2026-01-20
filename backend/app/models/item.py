@@ -36,67 +36,63 @@ class ItemStatus(str, enum.Enum):
 class ClothingItem(Base):
     __tablename__ = "clothing_items"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
 
     # Image paths
     image_path: Mapped[str] = mapped_column(String(500), nullable=False)
-    thumbnail_path: Mapped[Optional[str]] = mapped_column(String(500))
-    medium_path: Mapped[Optional[str]] = mapped_column(String(500))
-    image_hash: Mapped[Optional[str]] = mapped_column(String(16), index=True)  # pHash hex string
+    thumbnail_path: Mapped[str | None] = mapped_column(String(500))
+    medium_path: Mapped[str | None] = mapped_column(String(500))
+    image_hash: Mapped[str | None] = mapped_column(String(16), index=True)  # pHash hex string
 
     # Classification
     type: Mapped[str] = mapped_column(String(50), nullable=False)
-    subtype: Mapped[Optional[str]] = mapped_column(String(50))
+    subtype: Mapped[str | None] = mapped_column(String(50))
 
     # Tags and attributes
     tags: Mapped[dict] = mapped_column(JSONB, default=dict)
     colors: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
-    primary_color: Mapped[Optional[str]] = mapped_column(String(50))
-    pattern: Mapped[Optional[str]] = mapped_column(String(50))
-    material: Mapped[Optional[str]] = mapped_column(String(50))
+    primary_color: Mapped[str | None] = mapped_column(String(50))
+    pattern: Mapped[str | None] = mapped_column(String(50))
+    material: Mapped[str | None] = mapped_column(String(50))
     style: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
-    formality: Mapped[Optional[str]] = mapped_column(String(50))
+    formality: Mapped[str | None] = mapped_column(String(50))
     season: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
     # AI metadata
     status: Mapped[ItemStatus] = mapped_column(
-        Enum(ItemStatus, name='item_status'), default=ItemStatus.processing
+        Enum(ItemStatus, name="item_status"), default=ItemStatus.processing
     )
     ai_processed: Mapped[bool] = mapped_column(Boolean, default=False)
-    ai_confidence: Mapped[Optional[Decimal]] = mapped_column(Numeric(3, 2))
-    ai_raw_response: Mapped[Optional[dict]] = mapped_column(JSONB)
+    ai_confidence: Mapped[Decimal | None] = mapped_column(Numeric(3, 2))
+    ai_raw_response: Mapped[dict | None] = mapped_column(JSONB)
 
     # Usage tracking
     wear_count: Mapped[int] = mapped_column(Integer, default=0)
-    last_worn_at: Mapped[Optional[date]] = mapped_column(Date)
-    last_suggested_at: Mapped[Optional[date]] = mapped_column(Date)
+    last_worn_at: Mapped[date | None] = mapped_column(Date)
+    last_suggested_at: Mapped[date | None] = mapped_column(Date)
     suggestion_count: Mapped[int] = mapped_column(Integer, default=0)
     acceptance_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # AI description (human-readable caption)
-    ai_description: Mapped[Optional[str]] = mapped_column(Text)
+    ai_description: Mapped[str | None] = mapped_column(Text)
 
     # User metadata
-    name: Mapped[Optional[str]] = mapped_column(String(100))
-    brand: Mapped[Optional[str]] = mapped_column(String(100))
-    purchase_date: Mapped[Optional[date]] = mapped_column(Date)
-    purchase_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
-    notes: Mapped[Optional[str]] = mapped_column(Text)
+    name: Mapped[str | None] = mapped_column(String(100))
+    brand: Mapped[str | None] = mapped_column(String(100))
+    purchase_date: Mapped[date | None] = mapped_column(Date)
+    purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    notes: Mapped[str | None] = mapped_column(Text)
     favorite: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Lifecycle
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
-    archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    archive_reason: Mapped[Optional[str]] = mapped_column(String(50))
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    archive_reason: Mapped[str | None] = mapped_column(String(50))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -111,23 +107,19 @@ class ClothingItem(Base):
 class ItemHistory(Base):
     __tablename__ = "item_history"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     item_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("clothing_items.id", ondelete="CASCADE"), nullable=False
     )
-    outfit_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    outfit_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("outfits.id", ondelete="SET NULL")
     )
 
     worn_at: Mapped[date] = mapped_column(Date, nullable=False)
-    occasion: Mapped[Optional[str]] = mapped_column(String(50))
-    notes: Mapped[Optional[str]] = mapped_column(Text)
+    occasion: Mapped[str | None] = mapped_column(String(50))
+    notes: Mapped[str | None] = mapped_column(Text)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     item: Mapped["ClothingItem"] = relationship("ClothingItem", back_populates="wear_history")
