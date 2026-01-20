@@ -10,6 +10,7 @@ venv/
 dist/
 build/
 *.egg-info/
+*.tsbuildinfo
 
 # Environment and secrets
 .env
