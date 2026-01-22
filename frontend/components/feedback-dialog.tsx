@@ -60,9 +60,9 @@ const PAGE_SIZE = 24;
 
 interface AccumulatedItem {
   id: string;
-  name: string | null;
+  name?: string;
   type: string;
-  thumbnail_path: string | null;
+  thumbnail_path?: string;
   image_path: string;
   is_archived: boolean;
 }
