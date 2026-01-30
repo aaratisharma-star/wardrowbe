@@ -178,9 +178,9 @@ function ItemPairCard({ pair }: { pair: ItemPair }) {
           href={`/dashboard/wardrobe/${pair.item1.id}`}
           className="w-12 h-12 rounded bg-background overflow-hidden relative flex-shrink-0 hover:ring-2 ring-primary transition-all"
         >
-          {pair.item1.thumbnail_path ? (
+          {pair.item1.thumbnail_url ? (
             <Image
-              src={`/api/v1/images/${pair.item1.thumbnail_path}`}
+              src={pair.item1.thumbnail_url}
               alt={pair.item1.name || pair.item1.type}
               fill
               className="object-cover"
@@ -201,9 +201,9 @@ function ItemPairCard({ pair }: { pair: ItemPair }) {
           href={`/dashboard/wardrobe/${pair.item2.id}`}
           className="w-12 h-12 rounded bg-background overflow-hidden relative flex-shrink-0 hover:ring-2 ring-primary transition-all"
         >
-          {pair.item2.thumbnail_path ? (
+          {pair.item2.thumbnail_url ? (
             <Image
-              src={`/api/v1/images/${pair.item2.thumbnail_path}`}
+              src={pair.item2.thumbnail_url}
               alt={pair.item2.name || pair.item2.type}
               fill
               className="object-cover"

@@ -1,77 +1,122 @@
+"""Item pairing API endpoints."""
+
 import logging
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.outfit import Outfit, OutfitSource
-from app.models.user import User
+from app.models.outfit import Outfit, OutfitItem, OutfitSource
 from app.services.pairing_service import (
     AIGenerationError,
     InsufficientItemsError,
     PairingService,
 )
 from app.utils.auth import get_current_user
+from app.utils.signed_urls import sign_image_url
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pairings", tags=["Pairings"])
 
 
+# Request/Response schemas
 class GeneratePairingsRequest(BaseModel):
+    """Request to generate pairings for an item."""
+
     num_pairings: int = Field(default=3, ge=1, le=5, description="Number of pairings to generate")
 
 
 class SourceItemResponse(BaseModel):
+    """Source item in a pairing."""
+
     id: UUID
     type: str
-    subtype: str | None = None
-    name: str | None = None
-    primary_color: str | None = None
+    subtype: Optional[str] = None
+    name: Optional[str] = None
+    primary_color: Optional[str] = None
     image_path: str
-    thumbnail_path: str | None = None
+    thumbnail_path: Optional[str] = None
+
+    @computed_field
+    @property
+    def image_url(self) -> str:
+        """Signed URL for the full-size image."""
+        return sign_image_url(self.image_path)
+
+    @computed_field
+    @property
+    def thumbnail_url(self) -> Optional[str]:
+        """Signed URL for the thumbnail image."""
+        if self.thumbnail_path:
+            return sign_image_url(self.thumbnail_path)
+        return None
 
 
 class PairingItemResponse(BaseModel):
+    """Individual item in a pairing."""
+
     id: UUID
     type: str
-    subtype: str | None = None
-    name: str | None = None
-    primary_color: str | None = None
+    subtype: Optional[str] = None
+    name: Optional[str] = None
+    primary_color: Optional[str] = None
     colors: list[str] = []
     image_path: str
-    thumbnail_path: str | None = None
-    layer_type: str | None = None
+    thumbnail_path: Optional[str] = None
+    layer_type: Optional[str] = None
     position: int
+
+    @computed_field
+    @property
+    def image_url(self) -> str:
+        """Signed URL for the full-size image."""
+        return sign_image_url(self.image_path)
+
+    @computed_field
+    @property
+    def thumbnail_url(self) -> Optional[str]:
+        """Signed URL for the thumbnail image."""
+        if self.thumbnail_path:
+            return sign_image_url(self.thumbnail_path)
+        return None
 
 
 class FeedbackSummary(BaseModel):
-    rating: int | None = None
-    comment: str | None = None
-    worn_at: date | None = None
+    """Summary of outfit feedback."""
+
+    rating: Optional[int] = None
+    comment: Optional[str] = None
+    worn_at: Optional[date] = None
 
 
 class PairingResponse(BaseModel):
+    """Pairing response with source item highlighted."""
+
     id: UUID
     occasion: str
     scheduled_for: date
     status: str
     source: str
-    reasoning: str | None = None
-    style_notes: str | None = None
-    highlights: list[str] | None = None
-    source_item: SourceItemResponse | None = None
+    reasoning: Optional[str] = None
+    style_notes: Optional[str] = None
+    highlights: Optional[list[str]] = None
+    source_item: Optional[SourceItemResponse] = None
     items: list[PairingItemResponse]
-    feedback: FeedbackSummary | None = None
+    feedback: Optional[FeedbackSummary] = None
     created_at: datetime
 
 
 class PairingListResponse(BaseModel):
+    """Paginated pairing list response."""
+
     pairings: list[PairingResponse]
     total: int
     page: int
@@ -80,11 +125,14 @@ class PairingListResponse(BaseModel):
 
 
 class GeneratePairingsResponse(BaseModel):
+    """Response after generating pairings."""
+
     generated: int
     pairings: list[PairingResponse]
 
 
 def pairing_to_response(outfit: Outfit) -> PairingResponse:
+    """Convert Outfit model to PairingResponse."""
     items = []
     for outfit_item in sorted(outfit.items, key=lambda x: x.position):
         item = outfit_item.item
@@ -155,6 +203,12 @@ async def generate_pairings(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> GeneratePairingsResponse:
+    """
+    Generate outfit pairings for a specific item.
+
+    Creates multiple complete outfits that all include the specified item,
+    with AI-generated reasoning for why each combination works.
+    """
     service = PairingService(db)
 
     try:
@@ -167,18 +221,18 @@ async def generate_pairings(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        ) from None
+        )
     except AIGenerationError as e:
         logger.error(f"AI pairing generation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e),
-        ) from None
+        )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        ) from None
+        )
 
     return GeneratePairingsResponse(
         generated=len(pairings),
@@ -192,8 +246,9 @@ async def list_pairings(
     current_user: Annotated[User, Depends(get_current_user)],
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    source_type: str | None = Query(None, description="Filter by source item type"),
+    source_type: Optional[str] = Query(None, description="Filter by source item type"),
 ) -> PairingListResponse:
+    """List all user's pairings with optional filtering."""
     service = PairingService(db)
     pairings, total = await service.get_all_pairings(
         user_id=current_user.id,
@@ -219,6 +274,7 @@ async def list_item_pairings(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> PairingListResponse:
+    """List pairings for a specific source item."""
     service = PairingService(db)
     pairings, total = await service.get_pairings_for_item(
         user_id=current_user.id,
@@ -242,6 +298,7 @@ async def delete_pairing(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
+    """Delete a pairing."""
     query = select(Outfit).where(
         and_(
             Outfit.id == pairing_id,

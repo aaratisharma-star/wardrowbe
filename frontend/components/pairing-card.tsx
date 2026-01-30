@@ -73,9 +73,9 @@ export function PairingCard({ pairing, onFeedback, onPreview }: PairingCardProps
             <p className="text-xs text-muted-foreground mb-1">Built around:</p>
             <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
               <div className="w-12 h-12 rounded-md bg-muted overflow-hidden relative border-2 border-primary/30">
-                {pairing.source_item.thumbnail_path ? (
+                {pairing.source_item.thumbnail_url ? (
                   <Image
-                    src={`/api/v1/images/${pairing.source_item.thumbnail_path}`}
+                    src={pairing.source_item.thumbnail_url}
                     alt={pairing.source_item.name || pairing.source_item.type}
                     fill
                     className="object-cover"
@@ -112,9 +112,9 @@ export function PairingCard({ pairing, onFeedback, onPreview }: PairingCardProps
               key={item.id}
               className="w-14 h-14 rounded-lg bg-muted overflow-hidden relative border shadow-sm group-hover:shadow-md transition-shadow"
             >
-              {item.thumbnail_path ? (
+              {item.thumbnail_url ? (
                 <Image
-                  src={`/api/v1/images/${item.thumbnail_path}`}
+                  src={item.thumbnail_url}
                   alt={item.name || item.type}
                   fill
                   className="object-cover"

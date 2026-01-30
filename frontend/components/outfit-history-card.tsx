@@ -155,9 +155,9 @@ export function OutfitHistoryCard({ outfit, onFeedback, onPreview }: OutfitHisto
               key={item.id}
               className="w-16 h-16 rounded-lg bg-muted overflow-hidden relative border shadow-sm group-hover:shadow-md transition-shadow"
             >
-              {item.thumbnail_path ? (
+              {item.thumbnail_url ? (
                 <Image
-                  src={`/api/v1/images/${item.thumbnail_path}`}
+                  src={item.thumbnail_url}
                   alt={item.name || item.type}
                   fill
                   className="object-cover"
@@ -210,9 +210,9 @@ export function OutfitHistoryCard({ outfit, onFeedback, onPreview }: OutfitHisto
                     className="w-14 h-14 rounded-lg bg-muted overflow-hidden relative border hover:ring-2 ring-primary transition-all"
                     title={item.name || item.type}
                   >
-                    {item.thumbnail_path ? (
+                    {item.thumbnail_url ? (
                       <Image
-                        src={`/api/v1/images/${item.thumbnail_path}`}
+                        src={item.thumbnail_url}
                         alt={item.name || item.type}
                         fill
                         className="object-cover"
@@ -304,9 +304,9 @@ export function OutfitHistoryCard({ outfit, onFeedback, onPreview }: OutfitHisto
           </DialogHeader>
           <div className="flex justify-center">
             <div className="w-64 h-64 rounded-lg bg-muted overflow-hidden relative">
-              {previewItem?.thumbnail_path ? (
+              {previewItem?.thumbnail_url ? (
                 <Image
-                  src={`/api/v1/images/${previewItem.thumbnail_path}`}
+                  src={previewItem.thumbnail_url}
                   alt={previewItem.name || previewItem.type}
                   fill
                   className="object-cover"

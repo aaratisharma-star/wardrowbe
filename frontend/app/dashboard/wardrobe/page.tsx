@@ -29,10 +29,7 @@ import { useItems, useItemTypes, useReanalyzeItem, useBulkDeleteItems, useBulkRe
 import { CLOTHING_TYPES, CLOTHING_COLORS, Item } from '@/lib/types';
 import { toast } from 'sonner';
 
-function getImageUrl(path: string | undefined) {
-  if (!path) return '/placeholder.svg';
-  return `/api/v1/images/${path}`;
-}
+// Images now use signed URLs from backend (item.image_url, item.thumbnail_url)
 
 function ItemCard({
   item,
@@ -50,7 +47,6 @@ function ItemCard({
   const colorInfo = CLOTHING_COLORS.find((c) => c.value === item.primary_color);
   const isProcessing = item.status === 'processing';
   const isError = item.status === 'error';
-  const imageUrl = getImageUrl(item.thumbnail_path);
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -64,9 +60,9 @@ function ItemCard({
       onClick={onClick}
     >
       <div className="relative aspect-square bg-muted">
-        {item.thumbnail_path ? (
+        {item.thumbnail_url ? (
           <Image
-            src={imageUrl}
+            src={item.thumbnail_url}
             alt={item.name || item.type}
             fill
             className="object-cover"
@@ -182,7 +178,7 @@ function EmptyWardrobe({ onAddClick }: { onAddClick: () => void }) {
       <div className="rounded-full bg-muted p-6 mb-4">
         <Grid3X3 className="h-12 w-12 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-semibold mb-2">Your wardrowbe is empty</h3>
+      <h3 className="text-lg font-semibold mb-2">Your wardrobe is empty</h3>
       <p className="text-muted-foreground mb-6 max-w-sm">
         Add your first clothing item to start getting personalized outfit
         suggestions.

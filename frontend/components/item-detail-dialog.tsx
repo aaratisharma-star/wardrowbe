@@ -58,10 +58,7 @@ interface ItemDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function getImageUrl(path: string | undefined) {
-  if (!path) return '/placeholder.svg';
-  return `/api/v1/images/${path}`;
-}
+// Images now use signed URLs from backend (item.image_url, item.thumbnail_url)
 
 export function ItemDetailDialog({ item, open, onOpenChange }: ItemDetailDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -169,8 +166,8 @@ export function ItemDetailDialog({ item, open, onOpenChange }: ItemDetailDialogP
 
   const isAnalyzing = reanalyzeItem.isPending || item.status === 'processing';
 
-  // Use original image for better quality in detail view
-  const imageUrl = getImageUrl(item.image_path);
+  // Use signed URL from backend for better quality in detail view
+  const imageUrl = item.image_url;
   const colorInfo = CLOTHING_COLORS.find((c) => c.value === item.primary_color);
   const typeInfo = CLOTHING_TYPES.find((t) => t.value === item.type);
 
@@ -274,7 +271,7 @@ export function ItemDetailDialog({ item, open, onOpenChange }: ItemDetailDialogP
             <div className="relative aspect-square bg-muted rounded-lg overflow-hidden">
               <Image
                 key={imageKey}
-                src={`${imageUrl}?v=${imageKey}`}
+                src={`${imageUrl}&v=${imageKey}`}
                 alt={item.name || item.type}
                 fill
                 className="object-cover"

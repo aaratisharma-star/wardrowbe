@@ -143,9 +143,9 @@ function ItemCard({ item }: { item: { id: string; name: string | null; type: str
       className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
     >
       <div className="w-12 h-12 rounded bg-muted overflow-hidden relative flex-shrink-0">
-        {item.thumbnail_path ? (
+        {item.thumbnail_url ? (
           <Image
-            src={`/api/v1/images/${item.thumbnail_path}`}
+            src={item.thumbnail_url}
             alt={item.name || item.type}
             fill
             className="object-cover"

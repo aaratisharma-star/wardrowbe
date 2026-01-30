@@ -25,10 +25,7 @@ interface GeneratePairingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function getImageUrl(path: string | undefined) {
-  if (!path) return '/placeholder.svg';
-  return `/api/v1/images/${path}`;
-}
+// Images now use signed URLs from backend (item.image_url, item.thumbnail_url)
 
 export function GeneratePairingsDialog({
   item,
@@ -69,7 +66,7 @@ export function GeneratePairingsDialog({
 
   if (!item) return null;
 
-  const imageUrl = getImageUrl(item.thumbnail_path || item.image_path);
+  const imageUrl = item.thumbnail_url || item.image_url;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -154,9 +151,9 @@ export function GeneratePairingsDialog({
                       key={pairingItem.id}
                       className="w-8 h-8 rounded overflow-hidden relative"
                     >
-                      {pairingItem.thumbnail_path ? (
+                      {pairingItem.thumbnail_url ? (
                         <Image
-                          src={`/api/v1/images/${pairingItem.thumbnail_path}`}
+                          src={pairingItem.thumbnail_url}
                           alt={pairingItem.type}
                           fill
                           className="object-cover"

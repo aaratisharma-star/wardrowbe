@@ -44,6 +44,7 @@ import { OCCASIONS, Outfit, SuggestRequest } from '@/lib/types';
 import { useWeather, Weather } from '@/lib/hooks/use-weather';
 import { cn } from '@/lib/utils';
 
+// Map occasion values to icons and colors
 const OCCASION_CONFIG: Record<string, { icon: React.ReactNode; color: string }> = {
   casual: { icon: <Shirt className="h-4 w-4" />, color: 'hover:border-blue-400 hover:bg-blue-50 data-[selected=true]:border-blue-500 data-[selected=true]:bg-blue-50 data-[selected=true]:text-blue-700' },
   office: { icon: <Briefcase className="h-4 w-4" />, color: 'hover:border-slate-400 hover:bg-slate-50 data-[selected=true]:border-slate-500 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-700' },
@@ -53,6 +54,7 @@ const OCCASION_CONFIG: Record<string, { icon: React.ReactNode; color: string }> 
   outdoor: { icon: <TreePine className="h-4 w-4" />, color: 'hover:border-green-400 hover:bg-green-50 data-[selected=true]:border-green-500 data-[selected=true]:bg-green-50 data-[selected=true]:text-green-700' },
 };
 
+// Weather condition to icon mapping
 function getWeatherIcon(condition: string, isDay: boolean) {
   const c = condition.toLowerCase();
   if (c.includes('rain') || c.includes('drizzle')) return <CloudRain className="h-8 w-8" />;
@@ -63,6 +65,7 @@ function getWeatherIcon(condition: string, isDay: boolean) {
   return isDay ? <Sun className="h-8 w-8" /> : <Cloud className="h-8 w-8" />;
 }
 
+// Get time-based greeting
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good morning';
@@ -70,6 +73,7 @@ function getGreeting() {
   return 'Good evening';
 }
 
+// Get weather-based outfit hint
 function getWeatherHint(weather: Weather): string {
   const temp = weather.temperature;
   const condition = weather.condition.toLowerCase();
@@ -350,9 +354,9 @@ function OutfitResult({
                 className="group relative rounded-xl border overflow-hidden bg-muted/30 hover:shadow-md transition-shadow"
               >
                 <div className="aspect-square relative">
-                  {item.thumbnail_path ? (
+                  {item.thumbnail_url ? (
                     <Image
-                      src={`/api/v1/images/${item.thumbnail_path}`}
+                      src={item.thumbnail_url}
                       alt={item.name || item.type}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform"

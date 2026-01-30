@@ -60,9 +60,9 @@ const PAGE_SIZE = 24;
 
 interface AccumulatedItem {
   id: string;
-  name?: string;
+  name: string | null;
   type: string;
-  thumbnail_path?: string;
+  thumbnail_path: string | null;
   image_path: string;
   is_archived: boolean;
 }
@@ -346,7 +346,7 @@ export function FeedbackDialog({ outfit, open, onClose }: FeedbackDialogProps) {
                       )}
                     >
                       <Image
-                        src={`/api/v1/images/${item.thumbnail_path || item.image_path}`}
+                        src={item.thumbnail_url || item.image_url}
                         alt={item.name || item.type}
                         fill
                         className="object-cover"

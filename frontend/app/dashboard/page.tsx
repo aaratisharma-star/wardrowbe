@@ -193,9 +193,9 @@ function PendingOutfitsCard() {
                   key={item.id}
                   className="w-10 h-10 rounded-full bg-muted overflow-hidden relative border-2 border-background"
                 >
-                  {item.thumbnail_path ? (
+                  {item.thumbnail_url ? (
                     <Image
-                      src={`/api/v1/images/${item.thumbnail_path}`}
+                      src={item.thumbnail_url}
                       alt={item.name || item.type}
                       fill
                       className="object-cover"

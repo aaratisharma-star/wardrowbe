@@ -69,10 +69,10 @@ export function OutfitPreviewDialog({ outfit, open, onClose }: OutfitPreviewDial
           <div className="relative bg-muted">
             {/* Image - smaller on mobile */}
             <div className="relative aspect-square w-full max-h-[280px] sm:max-h-[350px]">
-              {currentItem.thumbnail_path || currentItem.image_path ? (
+              {currentItem.image_url ? (
                 <Image
                   key={`${currentItem.id}-${imageKey}`}
-                  src={`/api/v1/images/${currentItem.image_path}?v=${imageKey}`}
+                  src={currentItem.image_url}
                   alt={currentItem.name || currentItem.type}
                   fill
                   className="object-contain"
@@ -186,9 +186,9 @@ export function OutfitPreviewDialog({ outfit, open, onClose }: OutfitPreviewDial
                         : 'border-transparent hover:border-muted-foreground/50'
                     }`}
                   >
-                    {item.thumbnail_path ? (
+                    {item.thumbnail_url ? (
                       <Image
-                        src={`/api/v1/images/${item.thumbnail_path}?v=${imageKey}`}
+                        src={item.thumbnail_url}
                         alt={item.name || item.type}
                         fill
                         className="object-cover"
