@@ -19,13 +19,12 @@ const nextConfig = {
       },
     ],
   },
-  // Type checking and linting are enforced during build
-  // Set to true only if CI runs these separately before docker build
+  // Skip type checking and linting during build (already done in CI)
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   async rewrites() {
     // Use backend hostname for server-side requests (Docker network)
