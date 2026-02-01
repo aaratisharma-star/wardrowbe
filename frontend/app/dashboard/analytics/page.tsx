@@ -136,7 +136,7 @@ function ColorBar({ color, percentage }: { color: string; percentage: number }) 
   );
 }
 
-function ItemCard({ item }: { item: { id: string; name: string | null; type: string; thumbnail_path: string | null; wear_count: number } }) {
+function ItemCard({ item }: { item: { id: string; name: string | null; type: string; thumbnail_path: string | null; thumbnail_url?: string | null; image_url?: string | null; wear_count: number } }) {
   return (
     <Link
       href={`/dashboard/wardrobe/${item.id}`}

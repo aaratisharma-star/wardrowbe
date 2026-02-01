@@ -255,7 +255,9 @@ export interface SourceItem {
   name?: string;
   primary_color?: string;
   image_path: string;
+  image_url: string;
   thumbnail_path?: string;
+  thumbnail_url?: string;
 }
 
 export interface Pairing extends Outfit {
