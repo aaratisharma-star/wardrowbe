@@ -16,8 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create non-root user
+# Create non-root user and storage directory
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+RUN mkdir -p /data/wardrobe && chown -R appuser:appuser /data/wardrobe
 USER appuser
 
 # Expose port
