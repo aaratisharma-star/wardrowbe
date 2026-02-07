@@ -152,7 +152,7 @@ class TestItemCRUD:
             json={"name": "New Name", "brand": "Test Brand"},
             headers=auth_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Unexpected error: {response.json()}"
         data = response.json()
         assert data["name"] == "New Name"
         assert data["brand"] == "Test Brand"
@@ -214,7 +214,7 @@ class TestItemArchive:
             json={"reason": "No longer fits"},
             headers=auth_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Unexpected error: {response.json()}"
         data = response.json()
         assert data["is_archived"] is True
         assert data["archive_reason"] == "No longer fits"
@@ -237,7 +237,7 @@ class TestItemArchive:
         await db_session.refresh(item)
 
         response = await client.post(f"/api/v1/items/{item.id}/restore", headers=auth_headers)
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Unexpected error: {response.json()}"
         data = response.json()
         assert data["is_archived"] is False
         assert data["archive_reason"] is None

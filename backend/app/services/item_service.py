@@ -191,8 +191,9 @@ class ItemService:
             setattr(item, field, value)
 
         await self.db.flush()
-        await self.db.refresh(item)
-        return item
+        # Re-fetch with eager loading to ensure relationships are properly loaded
+        result = await self.get_by_id(item.id, item.user_id)
+        return result  # type: ignore[return-value]
 
     async def delete(self, item: ClothingItem) -> None:
         await self.db.delete(item)
@@ -208,8 +209,9 @@ class ItemService:
         item.archive_reason = reason
         item.status = ItemStatus.archived
         await self.db.flush()
-        await self.db.refresh(item)
-        return item
+        # Re-fetch with eager loading to ensure relationships are properly loaded
+        result = await self.get_by_id(item.id, item.user_id)
+        return result  # type: ignore[return-value]
 
     async def restore(self, item: ClothingItem) -> ClothingItem:
         item.is_archived = False
@@ -217,8 +219,9 @@ class ItemService:
         item.archive_reason = None
         item.status = ItemStatus.ready
         await self.db.flush()
-        await self.db.refresh(item)
-        return item
+        # Re-fetch with eager loading to ensure relationships are properly loaded
+        result = await self.get_by_id(item.id, item.user_id)
+        return result  # type: ignore[return-value]
 
     async def log_wear(
         self,
