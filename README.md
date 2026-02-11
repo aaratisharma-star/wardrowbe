@@ -50,20 +50,25 @@ Self-hosted wardrobe management with AI-powered outfit recommendations. Take pho
 
 ## Screenshots
 
-### Wardrobe & AI Tagging
-| Wardrobe Grid | AI Analysis |
+### Wardrobe & Item Details
+| Grid View | Item Details & AI Analysis |
+|-----------|---------------------------|
+| ![Wardrobe](screenshots/last.png) | ![Item Details](screenshots/wardrobe.png) |
+
+### Wash Tracking & Outfit Suggestions
+| Wash Tracking | Suggestions |
 |---------------|-------------|
-| ![Wardrobe](screenshots/wardrobe.png) | ![AI Analysis](screenshots/wardrobe-grid.png) |
+| ![Wash Tracking](screenshots/needs-washing.png) | ![Suggest](screenshots/suggest.png) |
 
-### Outfit Suggestions & History
-| Suggestions | History Calendar |
-|-------------|------------------|
-| ![Suggest](screenshots/suggest.png) | ![History](screenshots/history.png) |
+### History & Analytics
+| History Calendar | Analytics |
+|------------------|-----------|
+| ![History](screenshots/history.png) | ![Analytics](screenshots/analytics.png) |
 
-### Analytics & Pairing
-| Analytics | Pairing |
-|-----------|---------------|
-| ![Analytics](screenshots/analytics.png) | ![Pairing](screenshots/pairings.png) |
+### Pairings
+| Pairing View | Pairing Modal |
+|--------------|---------------|
+| ![Pairing](screenshots/pairings.png) | ![Pairing Modal](screenshots/pairings-modal.png) |
 
 ## Quick Start
 
