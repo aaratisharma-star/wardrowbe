@@ -293,19 +293,29 @@ See the [k8s/](k8s/) directory for Kubernetes manifests including:
 | `NEXTAUTH_SECRET` | NextAuth session encryption | Yes |
 | `AI_BASE_URL` | AI service URL | Yes |
 | `AI_API_KEY` | AI API key (if required) | Depends |
+| `OIDC_ISSUER_URL` | OIDC provider URL (enables SSO login) | No |
+| `OIDC_CLIENT_ID` | OIDC client ID | If OIDC |
+| `OIDC_CLIENT_SECRET` | OIDC client secret | If OIDC |
+| `OIDC_SKIP_SSL_VERIFY` | Skip TLS verification for OIDC provider (self-signed certs) | No |
+| `LOCAL_DNS` | Custom DNS server for container name resolution (e.g. local OIDC host) | No |
+| `SMTP_HOST` | SMTP server for email notifications | No |
+| `SMTP_PORT` | SMTP port (default: 587) | No |
+| `SMTP_USER` | SMTP username | No |
+| `SMTP_PASSWORD` | SMTP password | No |
 
 See [.env.example](.env.example) for all options.
 
 ### Authentication
 
-- **Development Mode** (default): Simple email/name login
-- **OIDC Mode**: Authentik, Keycloak, Auth0, or any OIDC provider
+- **Development Mode** (default): Simple email/name login, no setup required
+- **OIDC Mode**: Any OIDC provider (PocketID, Authentik, Keycloak, Auth0, etc.)
+
+To enable OIDC, set `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`, and `OIDC_CLIENT_SECRET` in your `.env`. If your OIDC provider uses a self-signed certificate, set `OIDC_SKIP_SSL_VERIFY=true`. If your OIDC provider runs on a hostname that Docker containers can't resolve (e.g. a local DNS name), set `LOCAL_DNS` to your DNS server IP.
 
 ### Notifications
 
 - **ntfy.sh**: Free push notifications
-- **Mattermost**: Team messaging webhook
-- **Email**: SMTP-based
+- **Email**: SMTP-based (set `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` in `.env`)
 
 ### Weather
 
@@ -316,14 +326,15 @@ Uses [Open-Meteo](https://open-meteo.com/) - free, no API key needed.
 ### Backend
 
 ```bash
-cd backend
-pip install -r requirements.txt
+# Run tests (requires running containers)
+docker compose exec backend python -m pytest tests/ -v --tb=short
 
-# Run tests
-pytest
+# Run a specific test file
+docker compose exec backend python -m pytest tests/test_notification_workers.py -v
 
-# Run with hot reload
-uvicorn app.main:app --reload
+# Lint
+pip install ruff
+ruff check --fix backend/app/ && ruff format backend/app/
 ```
 
 ### Frontend

@@ -68,9 +68,11 @@ services:
       NTFY_TOPIC: ${NTFY_TOPIC:-}
       NTFY_TOKEN: ${NTFY_TOKEN:-}
       APP_URL: ${APP_URL:-https://localhost:3000}
+      OIDC_SKIP_SSL_VERIFY: ${OIDC_SKIP_SSL_VERIFY:-false}
     volumes:
       - uploads_data:/data/uploads
     dns:
+      - ${LOCAL_DNS:-8.8.8.8}
       - 8.8.8.8
       - 1.1.1.1
     depends_on:
@@ -114,6 +116,7 @@ services:
     volumes:
       - uploads_data:/data/uploads
     dns:
+      - ${LOCAL_DNS:-8.8.8.8}
       - 8.8.8.8
       - 1.1.1.1
     depends_on:
@@ -133,6 +136,10 @@ services:
         NEXT_PUBLIC_API_URL: ""
     container_name: wardrobe_frontend
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    dns:
+      - ${LOCAL_DNS:-8.8.8.8}
     environment:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-https://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?Set NEXTAUTH_SECRET in .env}

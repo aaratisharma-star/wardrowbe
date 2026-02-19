@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from typing import Any
 
@@ -20,7 +21,8 @@ async def _fetch_jwks(issuer_url: str) -> dict:
         return cached
 
     discovery_url = f"{issuer_url.rstrip('/')}/.well-known/openid-configuration"
-    async with httpx.AsyncClient(timeout=10) as client:
+    skip_ssl = os.getenv("OIDC_SKIP_SSL_VERIFY", "false").lower() in ("true", "1")
+    async with httpx.AsyncClient(timeout=10, verify=not skip_ssl) as client:
         disc_resp = await client.get(discovery_url)
         disc_resp.raise_for_status()
         jwks_uri = disc_resp.json()["jwks_uri"]
