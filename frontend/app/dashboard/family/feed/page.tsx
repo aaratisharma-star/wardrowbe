@@ -420,6 +420,7 @@ function FeedContent() {
           outfit={previewOutfit}
           open={!!previewOutfit}
           onClose={() => setPreviewOutfit(null)}
+          isOwner={false}
         />
       )}
     </div>

@@ -21,9 +21,10 @@ interface OutfitPreviewDialogProps {
   outfit: Outfit;
   open: boolean;
   onClose: () => void;
+  isOwner?: boolean;
 }
 
-export function OutfitPreviewDialog({ outfit, open, onClose }: OutfitPreviewDialogProps) {
+export function OutfitPreviewDialog({ outfit, open, onClose, isOwner = true }: OutfitPreviewDialogProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [imageKey, setImageKey] = useState(0); // Force image reload after rotation
   const [showRatingForm, setShowRatingForm] = useState(false);
@@ -32,10 +33,10 @@ export function OutfitPreviewDialog({ outfit, open, onClose }: OutfitPreviewDial
   const { data: session } = useSession();
   const { data: family } = useFamily();
 
-  // Determine if current user can rate (is a family member but not outfit owner)
   const currentEmail = session?.user?.email;
   const currentMember = family?.members.find((m) => m.email === currentEmail);
   const isInFamily = !!family && !!currentMember;
+  const canRate = isInFamily && !isOwner;
   const myRating = outfit.family_ratings?.find((r) => r.user_id === currentMember?.id);
 
   const currentItem = items[currentIndex];
@@ -266,7 +267,7 @@ export function OutfitPreviewDialog({ outfit, open, onClose }: OutfitPreviewDial
                     </span>
                   )}
                 </h3>
-                {!showRatingForm && !myRating && (
+                {canRate && !showRatingForm && !myRating && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -279,7 +280,7 @@ export function OutfitPreviewDialog({ outfit, open, onClose }: OutfitPreviewDial
                 )}
               </div>
 
-              {(showRatingForm || myRating) && (
+              {canRate && (showRatingForm || myRating) && (
                 <FamilyRatingForm
                   outfitId={outfit.id}
                   existingRating={myRating ?? undefined}
@@ -291,11 +292,16 @@ export function OutfitPreviewDialog({ outfit, open, onClose }: OutfitPreviewDial
                 <FamilyRatingsDisplay
                   ratings={outfit.family_ratings}
                   outfitId={outfit.id}
-                  currentUserId={currentMember?.id}
+                  currentUserId={canRate ? currentMember?.id : undefined}
                 />
               )}
 
-              {(!outfit.family_ratings || outfit.family_ratings.length === 0) && !showRatingForm && !myRating && (
+              {(!outfit.family_ratings || outfit.family_ratings.length === 0) && !canRate && (
+                <p className="text-xs text-muted-foreground">
+                  No family ratings yet.
+                </p>
+              )}
+              {(!outfit.family_ratings || outfit.family_ratings.length === 0) && canRate && !showRatingForm && !myRating && (
                 <p className="text-xs text-muted-foreground">
                   No family ratings yet. Be the first to rate!
                 </p>
