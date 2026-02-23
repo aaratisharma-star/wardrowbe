@@ -74,8 +74,8 @@ class TestGetDbSession:
 
         assert get_db_session(ctx) is mock_session
 
-    def test_raises_key_error_before_init(self):
-        with pytest.raises(KeyError, match="db_session_factory"):
+    def test_raises_runtime_error_before_init(self):
+        with pytest.raises(RuntimeError, match="not initialized"):
             get_db_session({})
 
 
@@ -126,5 +126,5 @@ class TestDbLifecycleRoundTrip:
         await close_db(ctx)
         mock_engine.dispose.assert_awaited_once()
 
-        with pytest.raises(KeyError):
+        with pytest.raises(RuntimeError, match="not initialized"):
             get_db_session(ctx)
