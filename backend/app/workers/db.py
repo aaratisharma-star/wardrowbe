@@ -48,4 +48,10 @@ async def close_db(ctx: dict) -> None:
 
 def get_db_session(ctx: dict) -> AsyncSession:
     """Get a database session from the pool stored in *ctx*."""
-    return ctx["db_session_factory"]()
+    factory = ctx.get("db_session_factory")
+    if factory is None:
+        raise RuntimeError(
+            "Database session factory not initialized. "
+            "Ensure init_db(ctx) is called in the worker on_startup hook."
+        )
+    return factory()
