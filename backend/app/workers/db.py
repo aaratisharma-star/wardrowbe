@@ -24,6 +24,8 @@ async def init_db(ctx: dict) -> None:
         str(settings.database_url),
         echo=settings.database_echo,
         pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=10,
     )
     ctx["db_engine"] = engine
     ctx["db_session_factory"] = async_sessionmaker(
